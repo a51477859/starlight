@@ -1028,25 +1028,93 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
   $('#ticketBack').addEventListener('click', () => { openHall(currentHall); });
   $('#homeBtn').addEventListener('click', () => { openHall(currentHall); });
 
-  // save as PNG: html2canvas loads only when needed
-  let h2cLoading = null;
-  const loadH2C = () => h2cLoading ||= new Promise((res, rej) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    s.onload = () => res(window.html2canvas); s.onerror = rej; document.head.appendChild(s);
-  });
+  // save as PNG: the pass is drawn straight onto a canvas from the entry data
+  // (html2canvas cloned the whole page and waited forever on the lazy poster-wall images on phones)
+  const FONT_BODY = '"Pretendard Variable", Pretendard, "IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif';
+  const FONT_DISPLAY = 'Anton, Impact, "Arial Narrow", sans-serif';
+  function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+  function fitText(g, text, maxW, size, weight, family) {
+    let s = size; do { g.font = `${weight} ${s}px ${family}`; s -= 2; } while (g.measureText(text).width > maxW && s > 14);
+  }
+  async function drawPass(e) {
+    const S = 2, W = 360 * S, H = 536 * S, pad = 20 * S;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    try { await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]); } catch {}
+    const h = HALLS[e.hall], list = MOVIES[e.hall];
+    const pick = list.find(m => m.id === e.movie);
+    const win = FESTIVAL.announced ? list.find(m => m.id === FESTIVAL.winners[e.hall]) : null;
+    const headH = 150 * S, perfY = 406 * S, notch = 13 * S;
+
+    g.fillStyle = '#0B0B0F'; g.fillRect(0, 0, W, H);
+    g.save(); rr(g, 0, 0, W, H, 18 * S); g.clip();
+    g.fillStyle = '#141418'; g.fillRect(0, 0, W, H);
+    const grad = g.createLinearGradient(0, 0, W, headH); grad.addColorStop(0, '#D62839'); grad.addColorStop(1, '#8E1422');
+    g.fillStyle = grad; g.fillRect(0, 0, W, headH);
+    const drawImg = (img, x, y, w, rot) => { if (!img) return; const hh = w * img.height / img.width; g.save(); g.translate(x + w / 2, y + hh / 2); g.rotate(rot); g.drawImage(img, -w / 2, -hh / 2, w, hh); g.restore(); };
+    drawImg(stars[2] || stars[0], W - 82 * S, -8 * S, 92 * S, .21);
+    drawImg(kernels[0], W - 106 * S, 54 * S, 44 * S, -.31);
+    g.fillStyle = '#FFFFFF'; g.textBaseline = 'alphabetic';
+    g.font = `400 ${14 * S}px ${FONT_DISPLAY}`; g.fillText('YULPO STARLIGHT CINEMA', pad, 34 * S);
+    g.globalAlpha = .85; g.font = `600 ${12 * S}px ${FONT_BODY}`; g.fillText('제2회 율포 별빛영화제', pad, 52 * S); g.globalAlpha = 1;
+    g.font = `400 ${40 * S}px ${FONT_DISPLAY}`; g.fillText('STARLIGHT', pad, 98 * S); g.fillText('FESTIVAL PASS', pad, 136 * S);
+
+    // name / class / show / date
+    const cells = [['NAME', e.name], ['CLASS', `${e.grade}학년 ${e.cls}반 ${e.num}번`], ['SHOW', `${h.name.slice(0, 2)} · ${h.time.split(' · ')[1]}`], ['DATE', FESTIVAL.showDate]];
+    cells.forEach(([k, v], i) => {
+      const x = pad + (i % 2) * 164 * S, y = headH + 36 * S + Math.floor(i / 2) * 56 * S;
+      g.fillStyle = '#9C95A2'; g.font = `400 ${11 * S}px ${FONT_DISPLAY}`; g.fillText(k, x, y);
+      g.fillStyle = '#F4EEE3'; fitText(g, String(v), 150 * S, 17 * S, 800, FONT_BODY); g.fillText(String(v), x, y + 24 * S);
+    });
+    // NOW SHOWING box
+    const bx = pad, by = headH + 140 * S, bw = W - pad * 2, bh = 92 * S;
+    g.fillStyle = '#1E1E24'; rr(g, bx, by, bw, bh, 12 * S); g.fill();
+    g.strokeStyle = '#2C2C34'; g.lineWidth = S; g.stroke();
+    g.fillStyle = '#9C95A2'; g.font = `400 ${11 * S}px ${FONT_DISPLAY}`; g.fillText('NOW SHOWING', bx + 14 * S, by + 24 * S);
+    const title = win ? win.title : '상영작 발표 예정';
+    g.fillStyle = '#FFC940'; fitText(g, title, bw - 28 * S, 19 * S, 900, FONT_BODY); g.fillText(title, bx + 14 * S, by + 52 * S);
+    if (pick) { g.fillStyle = '#BDB6C2'; fitText(g, `내가 고른 영화 · ${pick.title}`, bw - 28 * S, 13 * S, 500, FONT_BODY); g.fillText(`내가 고른 영화 · ${pick.title}`, bx + 14 * S, by + 76 * S); }
+
+    // perforation + stub
+    g.strokeStyle = '#3A3A44'; g.lineWidth = 2 * S; g.setLineDash([6 * S, 6 * S]);
+    g.beginPath(); g.moveTo(18 * S, perfY); g.lineTo(W - 18 * S, perfY); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#D62839'; g.font = `400 ${24 * S}px ${FONT_DISPLAY}`; g.fillText('ADMIT ONE', pad, perfY + 48 * S);
+    g.fillStyle = '#9C95A2'; g.font = `400 ${11 * S}px ${FONT_DISPLAY}`; g.fillText(`${h.tag} · 체육관`, pad, perfY + 66 * S);
+    // barcode from the ticket number (same pattern as on screen)
+    let hsh = 0; for (const ch of e.ticketNo) hsh = (hsh * 31 + ch.charCodeAt(0)) >>> 0;
+    const bars = []; let total = 0;
+    for (let i = 0; i < 34; i++) { hsh = (hsh * 1103515245 + 12345) >>> 0; const w = 1 + (hsh >>> 29) % 3, gap = 1 + (hsh >>> 26) % 3; bars.push([w, gap]); total += w + gap; }
+    let bxp = W - pad - total * S; g.fillStyle = '#F4EEE3';
+    bars.forEach(([w, gap]) => { g.fillRect(bxp, perfY + 22 * S, w * S, 46 * S); bxp += (w + gap) * S; });
+    g.fillStyle = '#BDB6C2'; g.font = `400 ${13 * S}px ${FONT_DISPLAY}`; g.fillText(`TICKET NO. ${e.ticketNo}`, pad, perfY + 104 * S);
+    g.restore();
+    // notches cut out of both edges at the perforation
+    g.fillStyle = '#0B0B0F';
+    [[0, perfY], [W, perfY]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, notch, 0, Math.PI * 2); g.fill(); });
+    return c;
+  }
   $('#saveBtn').addEventListener('click', async () => {
     const btn = $('#saveBtn'); btn.disabled = true; btn.textContent = '이미지 만드는 중…';
     try {
-      const h2c = await loadH2C();
-      const canvas = await h2c($('#pass'), { backgroundColor: '#0B0B0F', scale: 2, useCORS: true });
-      const url = canvas.toDataURL('image/png');
-      const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      if (!ios) { try { const a = document.createElement('a'); a.href = url; a.download = `starlight-pass-${myEntry?.ticketNo || 'ticket'}.png`; a.click(); } catch {} }
+      if (!myEntry) throw new Error('no ticket');
+      const canvas = await Promise.race([drawPass(myEntry), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))]);
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      const name = `starlight-pass-${myEntry.ticketNo}.png`;
+      const url = URL.createObjectURL(blob);
+      const file = blob && typeof File === 'function' ? new File([blob], name, { type: 'image/png' }) : null;
+      const canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
       const ov = document.createElement('div'); ov.className = 'saved';
-      ov.innerHTML = `<img alt="내 티켓 이미지"><p>${ios ? '이미지를 길게 눌러 <b>사진에 저장</b>하세요.' : '저장이 안 되면 이미지를 길게 누르거나 오른쪽 클릭해서 저장하세요.'}</p><button class="btn-sub">닫기</button>`;
+      ov.innerHTML = `<img alt="내 티켓 이미지"><p>이미지를 <b>길게 눌러</b> 사진에 저장하세요.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+          ${canShare ? '<button class="btn-main" data-act="share">사진에 저장 · 공유</button>' : '<button class="btn-main" data-act="dl">파일로 저장</button>'}
+          <button class="btn-sub" data-act="close">닫기</button></div>`;
       ov.querySelector('img').src = url;
-      ov.querySelector('button').onclick = () => ov.remove();
+      ov.addEventListener('click', async ev => {
+        const act = ev.target.closest('[data-act]')?.dataset.act;
+        if (act === 'close') { ov.remove(); URL.revokeObjectURL(url); }
+        if (act === 'share') { try { await navigator.share({ files: [file], title: 'STARLIGHT FESTIVAL PASS' }); } catch {} }
+        if (act === 'dl') { const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
+      });
       document.body.appendChild(ov);
     } catch {
       toast('이미지를 만들지 못했어요. 화면을 캡처해 주세요');
