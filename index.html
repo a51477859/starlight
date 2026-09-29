@@ -1,0 +1,1108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="제2회 율포 별빛영화제 — 팝콘을 터뜨리고 올해의 상영작에 투표하세요.">
+<meta property="og:title" content="YULPO STARLIGHT CINEMA · 율포 별빛영화제">
+<meta property="og:description" content="오늘, 우리 학교가 영화관이 됩니다. 상영작 투표에 참여하세요!">
+<meta property="og:image" content="https://a51477859.github.io/starlight/assets/img/key-visual.jpg">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<title>Yulpo Starlight Cinema</title>
+<meta name="theme-color" content="#0B0B0F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="preload" as="image" href="assets/img/box-closed.png">
+<style>
+/* Layout: three stacked full-screen scenes (intro → lobby → hall) plus one fx canvas on top; phone-first, PC splits the lobby into two columns */
+:root{
+  color-scheme: dark;
+  --ink:#0B0B0F; --ink-2:#1A1A1F; --red:#D62839; --red-deep:#8E1422; --corn:#FFC940; --cream:#F4EEE3; --mute:#A8A3AE;
+  --display:"Anton","Impact","Arial Narrow",sans-serif;
+  --body:"Pretendard Variable","Pretendard","IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --p:0; /* slide progress 0..1, driven from JS */
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--ink);color:var(--cream);font-family:var(--body);font-size:16px;line-height:1.55;overflow:hidden;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+.scene{position:fixed;inset:0;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 20px)}
+[hidden]{display:none!important}
+
+/* ---------- intro ---------- */
+#intro{display:grid;grid-template-rows:auto 1fr auto auto;justify-items:center;gap:10px;overflow:hidden;
+  background:radial-gradient(120% 70% at 50% 108%, rgba(214,40,57,calc(.16 + var(--p)*.3)), transparent 60%), var(--ink)}
+.spot{position:absolute;left:50%;top:-12%;width:min(140vw,1100px);height:115%;transform:translateX(-50%);pointer-events:none;
+  background:conic-gradient(from 180deg at 50% 0%, transparent 162deg, rgba(255,236,200,calc(.10 + var(--p)*.14)) 172deg, rgba(255,240,214,calc(.16 + var(--p)*.2)) 180deg, rgba(255,236,200,calc(.10 + var(--p)*.14)) 188deg, transparent 198deg);
+  filter:blur(6px);animation:sway 7s ease-in-out infinite alternate}
+@keyframes sway{from{transform:translateX(-50%) rotate(-1.2deg)}to{transform:translateX(-50%) rotate(1.2deg)}}
+.edition{position:relative;margin:4px 0 0;font-size:14px;font-weight:600;letter-spacing:.18em;color:#D8D2DC}
+.edition b{color:var(--corn);font-weight:700}
+.stagebox{position:relative;width:100%;display:grid;place-items:center;min-height:0}
+.marquee{position:absolute;inset:0;margin:0;display:grid;align-content:center;justify-items:center;pointer-events:none;
+  font-family:var(--display);font-weight:400;text-transform:uppercase;line-height:.86;letter-spacing:.01em;
+  font-size:clamp(64px,min(23vw,15vh),200px)}
+.marquee span{display:block;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.18));-webkit-background-clip:text;background-clip:text;color:transparent}
+.marquee span:nth-child(2){background:linear-gradient(180deg,#FF5A6A,rgba(214,40,57,.35));-webkit-background-clip:text;background-clip:text}
+.boxwrap{position:relative;height:min(46vh,480px);aspect-ratio:703/820;will-change:transform;cursor:pointer;touch-action:manipulation}
+.boxwrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+.boxwrap .open{opacity:0}
+.boxwrap img{transition:opacity .08s}
+.boxwrap::after{content:"";position:absolute;left:12%;right:12%;bottom:-3%;height:9%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.75),transparent);z-index:-1}
+.glow{position:absolute;inset:8% -6% -4%;border-radius:50%;background:radial-gradient(closest-side,rgba(214,40,57,.55),transparent);opacity:calc(.25 + var(--p)*.75);filter:blur(18px);z-index:-1}
+.hint{position:relative;margin:0;font-size:15px;color:#CFC9D3;text-align:center}
+.slider{position:relative;width:min(100%,400px);height:64px;border-radius:999px;background:rgba(26,26,31,.9);border:1px solid rgba(255,255,255,.09);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 30px rgba(0,0,0,.5);padding:6px;touch-action:none;user-select:none}
+.slider .fill{position:absolute;left:6px;top:6px;bottom:6px;width:52px;border-radius:999px;background:linear-gradient(90deg,rgba(214,40,57,.05),rgba(214,40,57,.6))}
+.slider .label{position:absolute;inset:0;display:grid;place-items:center;padding-left:40px;font-weight:800;font-size:17px;letter-spacing:.02em;pointer-events:none}
+.slider .label i{font-style:normal;display:inline-block;animation:nudge 1.4s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(5px)}}
+.knob{position:relative;z-index:1;width:52px;height:52px;border-radius:50%;background:var(--red);display:grid;place-items:center;cursor:grab;
+  box-shadow:0 6px 20px rgba(214,40,57,.5),inset 0 2px 0 rgba(255,255,255,.25)}
+.knob img{width:40px;height:40px;object-fit:contain;pointer-events:none}
+.knob:active{cursor:grabbing}
+.knob:focus-visible{outline:3px solid var(--corn);outline-offset:3px}
+.skip{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(11,11,15,.6);font-size:13px;cursor:pointer}
+.skip:focus-visible{outline:2px solid var(--corn);outline-offset:2px}
+
+/* ---------- fx layers ---------- */
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
+#flash{position:fixed;inset:0;pointer-events:none;z-index:30;opacity:0;
+  background:radial-gradient(90% 70% at 50% 0%, #FFFDF6 0%, #FFF3DA 35%, rgba(255,214,160,.85) 60%, rgba(214,40,57,.55) 100%)}
+
+/* ---------- lobby ---------- */
+#lobby{overflow-y:auto;overflow-x:hidden;padding:0;background:var(--ink)}
+.lobby-in{min-height:100%;display:grid;grid-template-rows:auto 1fr}
+.kv{position:relative;height:clamp(240px,44vh,420px);background:url(assets/img/key-visual.jpg) 76% 60%/cover no-repeat}
+.kv::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,15,.35) 0%,rgba(11,11,15,0) 35%,rgba(11,11,15,.2) 60%,var(--ink) 100%)}
+.brandbar{position:absolute;z-index:1;top:calc(env(safe-area-inset-top,0px) + 14px);left:16px;right:16px;display:flex;justify-content:space-between;align-items:center;font-family:var(--display);font-size:18px;letter-spacing:.06em}
+.brandbar small{font-family:var(--body);font-size:12px;letter-spacing:.08em;color:#E6E0E8;font-weight:600}
+.lobby-body{position:relative;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 28px);margin-top:-56px;display:grid;gap:22px;align-content:start;max-width:560px;width:100%;justify-self:center}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.16em;color:var(--corn);text-transform:uppercase}
+.lobby-body h2{margin:6px 0 0;font-size:clamp(30px,8.4vw,44px);line-height:1.18;font-weight:900;letter-spacing:-.02em;text-wrap:balance}
+.lobby-body h2 em{font-style:normal;color:var(--red)}
+.ask{font-size:18px;font-weight:800;margin:0}
+.hallgroup{display:grid;gap:10px;padding:14px;border-radius:14px;background:var(--ink-2);border:1px solid #26262D}
+.hallhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.hallhead b{font-size:15px}
+.hallhead span{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+.hallgroup .theme{margin-top:-6px;font-size:13px;color:var(--corn)}
+.chips span.rate.r12{background:#8A5A12}
+.grades{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grade{all:unset;cursor:pointer;height:56px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:18px;background:#26262D;border:1px solid #33333C;transition:transform .15s, background .15s}
+.grade:hover{background:#30303A}
+.grade:active{transform:scale(.96)}
+.grade:focus-visible{outline:3px solid var(--corn);outline-offset:2px}
+.hallgroup.star .grade{background:linear-gradient(180deg,#2B1418,#221216);border-color:#4A1F27}
+.myticket{all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 14px 10px 10px;border-radius:14px;border:1px dashed #4A4A55;font-weight:700}
+.myticket img{width:64px;height:auto;transform:rotate(-8deg);animation:float 3.2s ease-in-out infinite}
+.myticket small{display:block;font-weight:500;color:var(--mute);font-size:13px}
+.myticket:focus-visible{outline:3px solid var(--corn);outline-offset:2px}
+@keyframes float{50%{transform:rotate(-4deg) translateY(-4px)}}
+.credit{font-size:11px;color:#6F6A76;line-height:1.5}
+.lobby-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:6px;padding-top:14px;border-top:1px solid #22222A;font-size:12px;color:#6F6A76}
+.adminlink{font-size:13px;color:var(--mute);text-decoration:none;padding:6px 0}
+#adminHost{position:fixed;inset:0;z-index:200;overflow-y:auto;background:#0B0B0F}
+.adminlink:hover{color:var(--cream);text-decoration:underline;text-underline-offset:3px}
+.adminlink:focus-visible{outline:2px solid var(--corn)}
+.reveal{opacity:1}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);transform:translateX(-50%);background:#26262D;border:1px solid #3A3A44;padding:10px 16px;border-radius:999px;font-size:14px;z-index:40;white-space:nowrap}
+
+@media (min-width:900px){
+  .lobby-in{grid-template-rows:1fr;grid-template-columns:minmax(420px,520px) 1fr;min-height:100%}
+  .kv{order:2;height:auto;min-height:100%;background-position:70% 60%}
+  .kv::after{background:linear-gradient(90deg,var(--ink) 0%,rgba(11,11,15,.2) 28%,rgba(11,11,15,0) 60%)}
+  .brandbar{left:auto;right:28px;top:24px;gap:18px}
+  .lobby-body{margin-top:0;padding:56px 40px 40px;align-content:center}
+}
+
+/* ---------- hall home (Netflix-style) ---------- */
+#hall{padding:0;overflow-y:auto;overflow-x:hidden;background:var(--ink);scroll-behavior:smooth}
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;background:linear-gradient(180deg,rgba(11,11,15,.92),rgba(11,11,15,0));transition:background .25s}
+.topbar.solid{background:rgba(11,11,15,.94);backdrop-filter:blur(8px)}
+.logo{all:unset;cursor:pointer;font-family:var(--display);font-size:20px;letter-spacing:.05em;line-height:1}
+.logo span{color:var(--red)}
+.logo:focus-visible{outline:2px solid var(--corn);outline-offset:4px}
+.hallchip{font-size:13px;font-weight:700;padding:7px 12px;border-radius:999px;background:rgba(214,40,57,.16);border:1px solid rgba(214,40,57,.45);white-space:nowrap}
+.hero{position:relative;height:clamp(520px,76vh,720px);margin-top:calc(-1 * (env(safe-area-inset-top,0px) + 58px));overflow:hidden;isolation:isolate}
+/* 12 rows; the pattern repeats every 3 rows, so drifting 25% of the wall's own height loops seamlessly */
+.wall{position:absolute;top:-30%;left:-40%;right:-40%;display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:14px;transform:rotate(-12deg);z-index:-2;animation:drift 48s linear infinite}
+@keyframes drift{to{transform:rotate(-12deg) translateY(-25%)}}
+.wall .poster{box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;background:
+  linear-gradient(180deg,rgba(11,11,15,.85) 0%,rgba(11,11,15,.55) 30%,rgba(11,11,15,.7) 62%,var(--ink) 96%),
+  radial-gradient(70% 55% at 50% 45%,rgba(11,11,15,.2),rgba(11,11,15,.75))}
+.arc{position:absolute;left:-10%;right:-10%;bottom:-2px;height:90px;border-top:2px solid rgba(255,70,90,.9);border-radius:50% 50% 0 0/100% 100% 0 0;
+  background:radial-gradient(60% 120% at 50% 0%,rgba(214,40,57,.45),transparent 70%);box-shadow:0 -6px 40px rgba(214,40,57,.5)}
+.hero-copy{position:absolute;left:16px;right:16px;bottom:110px;display:grid;gap:14px;max-width:640px}
+.hero-copy .eyebrow{display:flex;gap:8px;align-items:center}
+.dday{font-family:var(--body);font-size:12px;font-weight:800;letter-spacing:.04em;color:var(--ink);background:var(--corn);padding:3px 8px;border-radius:6px;font-variant-numeric:tabular-nums}
+.hero-copy h1{margin:0;font-size:clamp(32px,8.6vw,60px);font-weight:900;line-height:1.14;letter-spacing:-.025em;text-wrap:balance}
+.hero-copy h1 em{font-style:normal;color:var(--red)}
+.hero-copy p{margin:0;color:#D6D0DA;font-size:16px;max-width:36ch}
+.cta{display:flex;gap:10px;flex-wrap:wrap}
+.btn-main,.btn-sub{all:unset;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 22px;border-radius:12px;font-weight:800;font-size:16px}
+.btn-main{background:var(--red);color:#fff;box-shadow:0 8px 24px rgba(214,40,57,.35)}
+.btn-sub{background:rgba(255,255,255,.12);color:#fff;backdrop-filter:blur(6px)}
+.btn-main:focus-visible,.btn-sub:focus-visible{outline:3px solid var(--corn);outline-offset:2px}
+.btn-main:active,.btn-sub:active{transform:scale(.97)}
+.demo-note{margin:0 16px;padding:10px 12px;border-radius:10px;border:1px dashed #4A4A55;color:var(--mute);font-size:13px}
+.row{padding:26px 0 6px}
+.row h3{margin:0 16px 12px;font-size:19px;font-weight:800;display:flex;align-items:baseline;gap:10px}
+.row h3 small{font-family:var(--display);font-weight:400;font-size:13px;letter-spacing:.12em;color:var(--mute)}
+.track{position:relative;display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 16px 18px;scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+.track::-webkit-scrollbar{display:none}
+.pick{all:unset;cursor:pointer;flex:0 0 auto;scroll-snap-align:start;display:flex;align-items:flex-end;width:min(64vw,300px);transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+.pick .num{font-family:var(--display);font-size:clamp(120px,34vw,190px);line-height:.8;margin-right:-18px;color:transparent;-webkit-text-stroke:3px #5C5C66;paint-order:stroke;user-select:none}
+.pick .poster{width:62%;flex:0 0 auto}
+.pick:focus-visible .poster{outline:3px solid var(--corn);outline-offset:3px}
+.pick.voted .poster::after{content:"내 선택";position:absolute;z-index:2;top:8px;right:8px;font-size:11px;font-weight:800;background:var(--corn);color:var(--ink);padding:3px 7px;border-radius:6px}
+@media (hover:hover){ .pick:hover{transform:scale(1.06)} .pick:hover .num{-webkit-text-stroke-color:var(--red)} }
+.info{flex:0 0 auto;scroll-snap-align:start;width:min(70vw,260px);padding:18px;border-radius:14px;background:var(--ink-2);border:1px solid #26262D;display:grid;gap:6px;align-content:start}
+.info .k{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--corn);text-transform:uppercase}
+.info b{font-size:18px;line-height:1.35}
+.info span{font-size:14px;color:var(--mute)}
+.event{position:relative;margin:0 16px 40px;padding:22px 18px;border-radius:16px;overflow:hidden;
+  background:radial-gradient(120% 90% at 100% 0%,rgba(255,201,64,.22),transparent 60%),linear-gradient(135deg,#2A1016,#15090C);border:1px solid #4A1F27;display:grid;gap:8px}
+.event .k{font-family:var(--display);font-size:22px;letter-spacing:.06em;color:var(--corn)}
+.event b{font-size:19px;line-height:1.4;max-width:24ch}
+.event span{font-size:14px;color:#D6C9CC;max-width:34ch}
+.event img{position:absolute;right:-8px;top:-6px;width:96px;transform:rotate(14deg);animation:bob 3.4s ease-in-out infinite}
+.event img+img{right:62px;top:56px;width:48px;animation-delay:-1.2s}
+@keyframes bob{50%{translate:0 -6px}}
+
+/* typographic placeholder poster (swap for official art once approved) */
+.poster{position:relative;aspect-ratio:2/3;border-radius:8px;overflow:hidden;isolation:isolate;
+  background:radial-gradient(90% 60% at 70% 20%,var(--c2),transparent 70%),linear-gradient(160deg,var(--c1),#0B0B0F 92%);container-type:inline-size}
+.poster::before{content:"";position:absolute;inset:0;z-index:-1;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 2px,transparent 2px 4px)}
+.poster .p-top{position:absolute;top:7cqw;left:7cqw;right:7cqw;font-size:max(7px,4.6cqw);letter-spacing:.14em;font-weight:700;opacity:.8;text-transform:uppercase}
+.poster .p-title{position:absolute;left:7cqw;right:7cqw;bottom:16cqw;font-size:13cqw;font-weight:900;line-height:1.08;letter-spacing:-.03em;text-wrap:balance}
+.poster .p-en{position:absolute;left:7cqw;bottom:8cqw;font-family:var(--display);font-size:6cqw;letter-spacing:.08em;opacity:.75;text-transform:uppercase}
+.poster .p-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 0;z-index:1}
+.poster.has-img>:not(.p-img){display:none}
+.poster .p-obj{position:absolute;right:-6cqw;top:18cqw;width:52cqw;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));transform:rotate(var(--r,12deg))}
+
+/* detail sheet */
+.sheet{position:fixed;inset:0;z-index:50;display:grid;align-items:end;justify-items:center}
+.sheet[hidden]{display:none}
+.sheet .dim{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
+.panel{position:relative;width:100%;max-width:560px;max-height:94%;overflow-y:auto;background:#121216;border-radius:20px 20px 0 0;
+  box-shadow:0 -20px 60px rgba(0,0,0,.6);overscroll-behavior:contain;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 96px)}
+.panel .grab{position:sticky;top:0;z-index:3;height:22px;display:grid;place-items:center}
+.panel .grab::before{content:"";width:40px;height:4px;border-radius:4px;background:rgba(255,255,255,.35)}
+.close{all:unset;cursor:pointer;position:absolute;top:12px;right:12px;z-index:4;width:40px;height:40px;border-radius:50%;background:rgba(11,11,15,.7);display:grid;place-items:center;font-size:20px}
+.close:focus-visible{outline:3px solid var(--corn)}
+.d-art{position:relative;margin-top:-22px}
+.d-art .poster{border-radius:0;aspect-ratio:2/3;width:100%;max-height:66vh}
+.d-art::after{content:"";position:absolute;inset:auto 0 0;height:55%;background:linear-gradient(180deg,transparent,#121216)}
+.d-body{position:relative;margin-top:-70px;padding:0 20px;display:grid;gap:14px}
+.d-body h2{margin:0;font-size:30px;font-weight:900;letter-spacing:-.02em;line-height:1.2}
+.d-body .en{font-family:var(--display);letter-spacing:.08em;color:var(--mute);font-size:14px;text-transform:uppercase}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{font-size:13px;font-weight:700;padding:5px 10px;border-radius:999px;background:#24242B;font-variant-numeric:tabular-nums}
+.chips span.rate{background:#1F6B3A}
+.logline{margin:0;font-size:17px;line-height:1.6;color:#E8E3EA}
+.points{margin:0;padding:14px 16px;border-radius:12px;background:#1A1A1F;display:grid;gap:8px;list-style:none}
+.points li{display:grid;grid-template-columns:22px 1fr;gap:6px;font-size:15px}
+.points li::before{content:"★";color:var(--corn)}
+.qbox{padding:14px 16px;border-radius:12px;border:1px dashed #4A4A55;font-size:14px;color:var(--mute)}
+.qbox b{display:block;color:var(--cream);font-size:16px;margin-top:2px}
+.actions{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:560px;z-index:5;display:grid;grid-template-columns:1fr 1.6fr;gap:8px;
+  padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 14px);background:linear-gradient(180deg,rgba(18,18,22,0),#121216 30%)}
+.actions .btn-main,.actions .btn-sub{min-height:56px;padding:0 12px}
+@media (min-width:900px){
+  .sheet{align-items:center}
+  .panel{border-radius:20px;max-width:880px;max-height:88vh;display:grid;grid-template-columns:340px 1fr;padding-bottom:0}
+  .panel .grab{display:none}
+  .d-art{margin:0}
+  .d-art .poster{aspect-ratio:2/3;height:100%}
+  .d-art::after{inset:0 0 0 auto;width:40%;height:auto;background:linear-gradient(90deg,transparent,#121216)}
+  .d-body{margin:0;padding:36px 32px 110px}
+  .actions{position:absolute;left:340px;right:0;transform:none;width:auto;max-width:none;bottom:0;border-radius:0 0 20px 0}
+  .hero-copy{left:48px;bottom:130px}
+  .row h3,.demo-note{margin-left:48px;margin-right:48px}
+  .track{padding-left:48px;padding-right:48px}
+  .event{margin-left:48px;margin-right:48px}
+  .topbar{padding-left:48px;padding-right:48px}
+  .pick{width:300px}
+}
+/* announced: NOW SHOWING */
+.nowshowing .hero-copy h1{font-family:var(--display);font-weight:400;letter-spacing:.02em;text-transform:uppercase}
+.ns-poster{position:absolute;right:16px;top:90px;width:min(34vw,210px);transform:rotate(4deg);box-shadow:0 20px 50px rgba(0,0,0,.7)}
+@media (max-width:899px){ .ns-poster{top:76px;right:18px;width:30vw} }
+
+/* ---------- entry (한마디 응모) ---------- */
+#entry,#ticket{overflow-y:auto;overflow-x:hidden;padding:0;background:radial-gradient(90% 50% at 50% 0%,rgba(214,40,57,.18),transparent 70%),var(--ink)}
+.subbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 10px;background:rgba(11,11,15,.9);backdrop-filter:blur(8px)}
+.iconbtn{all:unset;cursor:pointer;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:20px}
+.iconbtn:focus-visible{outline:2px solid var(--corn)}
+.subbar b{font-size:16px}
+.subbar .hallchip{margin-left:auto}
+.form{max-width:560px;margin:0 auto;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 120px);display:grid;gap:22px}
+.picked{display:grid;grid-template-columns:72px 1fr auto;gap:14px;align-items:center;padding:12px;border-radius:14px;background:var(--ink-2);border:1px solid #26262D}
+.picked .poster{width:72px}
+.picked small{display:block;font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--corn)}
+.picked b{font-size:18px;line-height:1.3}
+.linkbtn{all:unset;cursor:pointer;font-size:14px;color:var(--mute);text-decoration:underline;text-underline-offset:3px;padding:8px}
+.linkbtn:focus-visible{outline:2px solid var(--corn)}
+.q h2{margin:6px 0 0;font-size:clamp(22px,6vw,28px);line-height:1.35;font-weight:900;letter-spacing:-.02em;text-wrap:balance}
+.field{display:grid;gap:8px}
+.field>label,.field>.lab{font-size:14px;font-weight:700;color:#DCD6E0}
+.field .opt{font-weight:500;color:var(--mute)}
+textarea,input[type=text],input[type=number],select{width:100%;font:inherit;font-size:17px;color:var(--cream);background:#15151A;border:1px solid #33333C;border-radius:12px;padding:14px}
+textarea{min-height:120px;resize:none;line-height:1.5}
+textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(214,40,57,.25)}
+.count{justify-self:end;font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+.count.over{color:#FF6B7A}
+.who{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gchips{display:flex;gap:8px}
+.gchip{all:unset;cursor:pointer;flex:1;height:52px;border-radius:12px;display:grid;place-items:center;font-weight:800;background:#1C1C22;border:1px solid #33333C}
+.gchip[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:#fff}
+.gchip:focus-visible{outline:3px solid var(--corn);outline-offset:2px}
+.notice{font-size:13px;color:var(--mute);line-height:1.6;padding:12px 14px;border-radius:12px;background:#15151A}
+.err{color:#FF8591;font-size:14px;font-weight:700;min-height:1.2em}
+.bottombar{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 14px);background:linear-gradient(180deg,rgba(11,11,15,0),var(--ink) 35%)}
+.bottombar .btn-main{width:100%;max-width:528px;margin:0 auto;display:flex;box-sizing:border-box;min-height:56px}
+.btn-main[disabled]{opacity:.5;cursor:default}
+
+/* ---------- ticket (페스티벌 패스) ---------- */
+.ticket-wrap{max-width:560px;margin:0 auto;padding:22px 16px calc(env(safe-area-inset-bottom,0px) + 40px);display:grid;gap:18px;justify-items:center;text-align:center}
+.done h2{margin:0;font-size:clamp(26px,7vw,34px);font-weight:900;letter-spacing:-.02em;line-height:1.25}
+.done p{margin:6px 0 0;color:#D6D0DA}
+.pass{position:relative;width:min(100%,360px);text-align:left;color:#F4EEE3;background:#141418;border-radius:18px;overflow:hidden;
+  box-shadow:0 30px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06)}
+.pass-head{position:relative;padding:18px 20px 16px;background:linear-gradient(135deg,#D62839,#8E1422);overflow:hidden}
+.pass-head .brand{font-family:var(--display);font-size:14px;letter-spacing:.14em}
+.pass-head .edition{display:block;font-size:12px;opacity:.85;margin-top:2px}
+.pass-head .ttl{font-family:var(--display);font-size:40px;line-height:.95;margin-top:14px;letter-spacing:.01em}
+.pass-head img{position:absolute;right:-10px;top:-8px;width:92px;transform:rotate(12deg)}
+.pass-head img.k{right:62px;top:54px;width:44px;transform:rotate(-18deg)}
+.pass-body{padding:16px 20px 18px;display:grid;gap:14px}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;margin:0}
+.pgrid dt,.pmovie dt{font-family:var(--display);font-size:11px;letter-spacing:.16em;color:#9C95A2}
+.pgrid dd{margin:2px 0 0;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+.pmovie{margin:0;padding:12px 14px;border-radius:12px;background:#1E1E24;border:1px solid #2C2C34}
+.pmovie dd{margin:3px 0 0;font-size:19px;font-weight:900;color:var(--corn)}
+.pmovie small{display:block;margin-top:4px;font-size:13px;color:#BDB6C2}
+.perf{position:relative;height:0;border-top:2px dashed #3A3A44;margin:0 18px}
+.perf::before,.perf::after{content:"";position:absolute;top:-13px;width:24px;height:24px;border-radius:50%;background:var(--ink)}
+.perf::before{left:-31px}.perf::after{right:-31px}
+.pass-stub{padding:16px 20px 18px;display:grid;grid-template-columns:auto 1fr;gap:6px 16px;align-items:center}
+.admit{font-family:var(--display);font-size:24px;letter-spacing:.06em;color:var(--red);line-height:1}
+.admit small{display:block;font-size:11px;letter-spacing:.16em;color:#9C95A2;margin-top:4px}
+.barcode{display:flex;align-items:stretch;height:46px;gap:0;justify-self:end}
+.barcode i{display:block;background:#F4EEE3}
+.tno{grid-column:1/-1;font-family:var(--display);font-size:13px;letter-spacing:.2em;color:#BDB6C2;font-variant-numeric:tabular-nums}
+.ticket-actions{display:grid;gap:10px;width:min(100%,360px)}
+.ticket-actions .btn-main,.ticket-actions .btn-sub{width:100%;box-sizing:border-box;min-height:54px}
+.save-note{font-size:13px;color:var(--mute);margin:0}
+.saved{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.88);display:grid;place-items:center;padding:24px;text-align:center;gap:14px;align-content:center}
+.saved img{max-width:min(90vw,360px);max-height:70vh;border-radius:12px}
+.saved p{margin:0;color:#E8E3EA}
+
+/* ---------- lookup sheet ---------- */
+.lookup .panel{padding:22px 18px calc(env(safe-area-inset-bottom,0px) + 22px);display:grid;gap:14px;max-width:480px}
+.lookup h2{margin:0;font-size:22px;font-weight:900}
+@media (min-width:900px){ .lookup .panel{display:grid;grid-template-columns:1fr;border-radius:20px} }
+
+@media (prefers-reduced-motion:reduce){
+  .spot,.slider .label i,.myticket img,.wall,.event img{animation:none}
+}
+</style>
+
+</head>
+<body>
+<main id="intro" class="scene" aria-label="인트로">
+  <div class="spot" aria-hidden="true"></div>
+  <p class="edition"><b>제2회</b> 율포 별빛영화제</p>
+  <div class="stagebox">
+    <h1 class="marquee" aria-label="YULPO STARLIGHT CINEMA"><span>Yulpo</span><span>Starlight</span><span>Cinema</span></h1>
+    <div class="boxwrap" id="boxwrap" role="img" aria-label="빨간 줄무늬 팝콘 상자">
+      <div class="glow"></div>
+      <img class="closed" src="assets/img/box-closed.png" alt="" draggable="false">
+      <img class="open" src="assets/img/box-open.png" alt="" draggable="false">
+    </div>
+  </div>
+  <p class="hint">팝콘을 터뜨리고 영화제에 입장하세요</p>
+  <div class="slider" id="slider">
+    <div class="fill" id="fill"></div>
+    <div class="label" id="sliderLabel">Slide to Pop!&nbsp;<i>→</i></div>
+    <div class="knob" id="knob" tabindex="0" role="slider" aria-label="오른쪽으로 밀어서 팝콘 터뜨리기" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <img src="assets/img/kernel-3.png" alt="">
+    </div>
+  </div>
+  <button class="skip" id="skip" hidden>건너뛰기</button>
+</main>
+
+<section id="lobby" class="scene" hidden aria-label="로비">
+  <div class="lobby-in">
+    <div class="kv" role="img" aria-label="스포트라이트 아래 팝콘이 터지는 상자">
+      <div class="brandbar">YULPO STARLIGHT CINEMA <small>2026.10.23 FRI</small></div>
+    </div>
+    <div class="lobby-body">
+      <div class="reveal">
+        <div class="eyebrow">Now booking · Pick your movie</div>
+        <h2>오늘, 우리 학교가<br><em>영화관</em>이 됩니다</h2>
+      </div>
+      <p class="ask reveal">몇 학년이에요?</p>
+      <div class="hallgroup kids reveal">
+        <div class="hallhead"><b>1부 FAMILY · 별빛 키즈시네마</b><span>1~3학년 · 16:30</span></div>
+        <div class="theme">가족과 함께하는 따뜻한 모험</div>
+        <div class="grades">
+          <button class="grade" data-hall="kids">1학년</button>
+          <button class="grade" data-hall="kids">2학년</button>
+          <button class="grade" data-hall="kids">3학년</button>
+        </div>
+      </div>
+      <div class="hallgroup star reveal">
+        <div class="hallhead"><b>2부 TOGETHER · 별빛 시네마</b><span>4~6학년 · 19:30</span></div>
+        <div class="theme">함께라서 가능한 모험</div>
+        <div class="grades">
+          <button class="grade" data-hall="star">4학년</button>
+          <button class="grade" data-hall="star">5학년</button>
+          <button class="grade" data-hall="star">6학년</button>
+        </div>
+      </div>
+      <button class="myticket reveal" id="myticket"><img src="assets/img/ticket.png" alt=""><span>이미 투표했나요?<small>내 티켓 다시 보기</small></span></button>
+      <footer class="lobby-foot reveal">
+        <span>© 2026 율포 별빛영화제</span>
+        <a class="adminlink" href="#admin">관리자 화면</a>
+      </footer>
+    </div>
+  </div>
+</section>
+
+<section id="hall" class="scene" hidden aria-label="관 홈">
+  <header class="topbar" id="topbar">
+    <button class="logo" id="toLobby" aria-label="로비로">YULPO <span>STARLIGHT</span></button>
+    <span class="hallchip" id="hallChip"></span>
+  </header>
+  <div class="hero" id="hero">
+    <div class="wall" id="wall" aria-hidden="true"></div>
+    <div class="hero-copy">
+      <div class="eyebrow" id="heroEyebrow"></div>
+      <h1 id="heroTitle"></h1>
+      <p id="heroSub"></p>
+      <div class="cta">
+        <button class="btn-main" id="heroCta"></button>
+        <button class="btn-sub" id="heroInfo">영화제 안내</button>
+      </div>
+    </div>
+    <div class="arc" aria-hidden="true"></div>
+  </div>
+  <p class="demo-note" id="demoNote">포스터 © 각 배급사 · 율포 별빛영화제 교내 안내용으로만 사용합니다.</p>
+  <section class="row" id="pickRow">
+    <h3 id="pickHead">후보작 <small>PICK YOUR MOVIE</small></h3>
+    <div class="track" id="picks"></div>
+  </section>
+  <section class="row" id="infoRow">
+    <h3>영화제 안내 <small>FESTIVAL GUIDE</small></h3>
+    <div class="track" id="infos"></div>
+  </section>
+  <section class="row">
+    <h3>스타 이벤트 <small>STARLIGHT EVENT</small></h3>
+    <div class="event">
+      <img src="assets/img/star-3.png" alt=""><img src="assets/img/star-1.png" alt="">
+      <div class="k">STAR EVENT</div>
+      <b>영화처럼 반짝이는 한마디를 남겨 주세요</b>
+      <span>투표할 때 남긴 한마디 중에서 상영 당일 추첨합니다. 당첨되면 무대에서 직접 읽고 선물을 받아요!</span>
+    </div>
+  </section>
+</section>
+
+<section id="entry" class="scene" hidden aria-label="한마디 응모">
+  <header class="subbar">
+    <button class="iconbtn" id="entryBack" aria-label="관 홈으로">←</button>
+    <b>투표하고 한마디 남기기</b>
+    <span class="hallchip" id="entryChip"></span>
+  </header>
+  <form class="form" id="entryForm" novalidate>
+    <div class="picked">
+      <div id="pickedArt"></div>
+      <div><small>MY PICK</small><b id="pickedTitle"></b></div>
+      <button type="button" class="linkbtn" id="changePick">바꾸기</button>
+    </div>
+    <div class="q">
+      <div class="eyebrow">STAR EVENT · 한마디</div>
+      <h2 id="qText"></h2>
+    </div>
+    <div class="field">
+      <label for="comment">나의 한마디 <span class="opt" id="commentOpt">(선택 · 남기면 스타 이벤트 추첨에 들어가요)</span></label>
+      <textarea id="comment" maxlength="80" placeholder="영화처럼 반짝이는 생각을 남겨 주세요"></textarea>
+      <span class="count" id="count">0 / 50</span>
+    </div>
+    <div class="field">
+      <span class="lab" id="gradeLab">학년</span>
+      <div class="gchips" id="gchips" role="group" aria-labelledby="gradeLab"></div>
+    </div>
+    <div class="who">
+      <div class="field"><label for="cls">반</label><input type="number" id="cls" inputmode="numeric" min="1" max="20" placeholder="예: 3"></div>
+      <div class="field"><label for="num">번호</label><input type="number" id="num" inputmode="numeric" min="1" max="40" placeholder="예: 12"></div>
+      <div class="field"><label for="name">이름</label><input type="text" id="name" maxlength="10" autocomplete="off" placeholder="홍길동"></div>
+    </div>
+    <p class="notice">한 사람당 한 번만 투표할 수 있어요. 스타 이벤트에 당첨되면 상영 당일 화면에 학년·반·이름이 나오고, 무대에서 한마디를 직접 읽어 줘요.</p>
+    <p class="err" id="entryErr" role="alert"></p>
+  </form>
+  <div class="bottombar"><button class="btn-main" id="submitBtn" form="entryForm" type="submit">투표하고 티켓 받기</button></div>
+</section>
+
+<section id="ticket" class="scene" hidden aria-label="내 티켓">
+  <header class="subbar">
+    <button class="iconbtn" id="ticketBack" aria-label="관 홈으로">←</button>
+    <b>내 티켓</b>
+  </header>
+  <div class="ticket-wrap">
+    <div class="done" id="doneMsg">
+      <h2>예매가 완료되었습니다</h2>
+      <p>별빛영화제에서 만나요!</p>
+    </div>
+    <div class="pass" id="pass">
+      <div class="pass-head">
+        <img src="assets/img/star-3.png" alt=""><img class="k" src="assets/img/kernel-1.png" alt="">
+        <span class="brand">YULPO STARLIGHT CINEMA</span>
+        <span class="edition">제2회 율포 별빛영화제</span>
+        <div class="ttl">STARLIGHT<br>FESTIVAL PASS</div>
+      </div>
+      <div class="pass-body">
+        <dl class="pgrid">
+          <div><dt>NAME</dt><dd id="tName"></dd></div>
+          <div><dt>CLASS</dt><dd id="tClass"></dd></div>
+          <div><dt>SHOW</dt><dd id="tShow"></dd></div>
+          <div><dt>DATE</dt><dd id="tDate"></dd></div>
+        </dl>
+        <dl class="pmovie"><dt>NOW SHOWING</dt><dd id="tMovie"></dd><small id="tPick"></small></dl>
+      </div>
+      <div class="perf" aria-hidden="true"></div>
+      <div class="pass-stub">
+        <div class="admit">ADMIT ONE<small id="tPlace"></small></div>
+        <div class="barcode" id="tBar" aria-hidden="true"></div>
+        <div class="tno" id="tNo"></div>
+      </div>
+    </div>
+    <div class="ticket-actions">
+      <button class="btn-main" id="saveBtn">티켓 이미지로 저장</button>
+      <button class="btn-sub" id="homeBtn">관 홈으로</button>
+    </div>
+    <p class="save-note">입장할 때 이 화면을 보여 주세요. 상영작이 발표되면 티켓에 영화 제목이 채워져요.</p>
+  </div>
+</section>
+
+<div class="sheet lookup" id="lookup" hidden role="dialog" aria-modal="true" aria-labelledby="lkTitle">
+  <div class="dim" data-close></div>
+  <form class="panel" id="lookupForm" novalidate>
+    <h2 id="lkTitle">내 티켓 다시 보기</h2>
+    <p class="note" style="margin:0;color:var(--mute);font-size:14px">투표할 때 적은 학년·반·번호·이름을 입력해 주세요.</p>
+    <div class="who">
+      <div class="field"><label for="lkGrade">학년</label><select id="lkGrade"><option value="">선택</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+      <div class="field"><label for="lkCls">반</label><input type="number" id="lkCls" inputmode="numeric" min="1" max="20"></div>
+      <div class="field"><label for="lkNum">번호</label><input type="number" id="lkNum" inputmode="numeric" min="1" max="40"></div>
+    </div>
+    <div class="field"><label for="lkName">이름</label><input type="text" id="lkName" maxlength="10" autocomplete="off"></div>
+    <p class="err" id="lkErr" role="alert"></p>
+    <div class="actions" style="position:static;transform:none;padding:0;background:none;width:100%">
+      <button type="button" class="btn-sub" data-close>닫기</button>
+      <button type="submit" class="btn-main">티켓 찾기</button>
+    </div>
+  </form>
+</div>
+
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="dTitle">
+  <div class="dim" id="dim"></div>
+  <div class="panel" id="panel">
+    <div class="grab" aria-hidden="true"></div>
+    <button class="close" id="close" aria-label="닫기">✕</button>
+    <div class="d-art" id="dArt"></div>
+    <div class="d-body">
+      <div>
+        <h2 id="dTitle"></h2>
+        <div class="en" id="dEn"></div>
+      </div>
+      <div class="chips" id="dChips"></div>
+      <p class="logline" id="dLog"></p>
+      <ul class="points" id="dPoints"></ul>
+      <div class="qbox">투표하면 이 질문에 한마디를 남겨요<b id="dQ"></b></div>
+    </div>
+    <div class="actions">
+      <button class="btn-sub" id="dOther">다른 영화 보기</button>
+      <button class="btn-main" id="dVote">이 영화에 투표하기</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="fx" aria-hidden="true"></canvas>
+<div id="flash" aria-hidden="true"></div>
+
+<script src="js/data.js"></script>
+<script src="js/admin-view.js"></script>
+<script src="js/admin.js"></script>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = s => document.querySelector(s);
+  const root = document.documentElement;
+  const intro = $('#intro'), lobby = $('#lobby'), hall = $('#hall');
+  const boxwrap = $('#boxwrap'), boxClosed = boxwrap.querySelector('.closed'), boxOpen = boxwrap.querySelector('.open');
+  const slider = $('#slider'), knob = $('#knob'), fill = $('#fill'), label = $('#sliderLabel');
+  const { HALLS, MOVIES } = YSC;   // festival content lives in js/data.js
+  // poster QR uses ?hall=kids|star; #hall=… also works (preview hosts strip the query string)
+  const params = new URLSearchParams(location.search + '&' + location.hash.slice(1));
+  const hallParam = params.get('hall');
+
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} }
+  };
+  if (store.get('ysc_seen')) $('#skip').hidden = false;
+
+  // ---------- sprites ----------
+  const load = src => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+  let kernels = [], stars = [];
+  Promise.all([1,2,3,4,5,6].map(n => load(`assets/img/kernel-${n}.png`))).then(a => kernels = a.filter(Boolean));
+  Promise.all([1,2,3].map(n => load(`assets/img/star-${n}.png`))).then(a => stars = a.filter(Boolean));
+  load('assets/img/box-open.png'); load('assets/img/key-visual.jpg'); load('assets/img/ticket.png');
+
+  // ---------- fx canvas ----------
+  const cv = $('#fx'), ctx = cv.getContext('2d');
+  let W = 0, H = 0, DPR = 1, U = 1; // U = size unit scaled to viewport
+  function resize() {
+    DPR = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * DPR; cv.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    U = Math.min(W, H * 0.62) / 400;
+  }
+  addEventListener('resize', resize); resize();
+
+  const parts = [];
+  const dust = Array.from({ length: 34 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.4 + .4, s: Math.random() * .02 + .008, ph: Math.random() * 6 }));
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function boxTop() {
+    const r = boxwrap.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height * 0.16, w: r.width, bottom: r.bottom };
+  }
+  function spawnKernel(o, opts = {}) {
+    if (!kernels.length) return;
+    const img = kernels[(Math.random() * kernels.length) | 0];
+    const size = rand(opts.min || 34, opts.max || 70) * U;
+    parts.push({
+      img, x: o.x + rand(-o.w * .28, o.w * .28), y: o.y + rand(-10, 10) * U,
+      vx: opts.vx ?? rand(-1, 1) * rand(160, 520) * U, vy: opts.vy ?? -rand(620, 1180) * U,
+      rot: rand(0, 6.28), vr: rand(-9, 9), size, life: opts.life || 99, age: 0, fade: opts.fade || 0, g: 1900 * U
+    });
+  }
+  function spawnStar(o) {
+    if (!stars.length) return;
+    const img = stars[(Math.random() * stars.length) | 0];
+    parts.push({ img, x: o.x + rand(-o.w * .2, o.w * .2), y: o.y, vx: rand(-1, 1) * rand(120, 420) * U, vy: -rand(700, 1250) * U,
+      rot: rand(-.4, .4), vr: rand(-3, 3), size: rand(22, 46) * U, life: 99, age: 0, fade: 0, g: 1500 * U, twinkle: true });
+  }
+  function spawnSpark(o) {
+    const a = rand(0, Math.PI * 2), sp = rand(200, 900) * U;
+    parts.push({ spark: true, x: o.x + rand(-20, 20) * U, y: o.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 300 * U,
+      size: rand(1.5, 3.6) * U, life: rand(.5, 1.1), age: 0, g: 600 * U, hue: Math.random() < .7 ? '#FFD66B' : '#FFFFFF' });
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 1 / 30); last = now;
+    step(dt, now / 1000);
+    ctx.clearRect(0, 0, W, H);
+    // spotlight dust (intro only)
+    if (!intro.hidden) {
+      ctx.globalCompositeOperation = 'lighter';
+      for (const d of dust) {
+        d.y -= d.s * dt; if (d.y < 0) d.y = 1;
+        const x = W / 2 + (d.x - .5) * Math.min(W, 700) * (0.25 + (1 - d.y) * .6) + Math.sin(now / 1500 + d.ph) * 8;
+        ctx.globalAlpha = .35 + .35 * Math.sin(now / 900 + d.ph);
+        ctx.fillStyle = '#FFE9C4'; ctx.beginPath(); ctx.arc(x, d.y * H * .8, d.r, 0, 6.283); ctx.fill();
+      }
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    }
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      p.age += dt;
+      p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= (1 - .35 * dt);
+      if (p.rot !== undefined) p.rot += p.vr * dt;
+      if (p.age > p.life || p.y > H + 120) { parts.splice(i, 1); continue; }
+      if (p.spark) {
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 1 - p.age / p.life; ctx.fillStyle = p.hue;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, 6.283); ctx.fill();
+        ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+        continue;
+      }
+      let a = 1;
+      if (p.fade) a = Math.max(0, 1 - p.age / p.life);
+      if (p.twinkle) a *= .75 + .25 * Math.sin(p.age * 18);
+      ctx.globalAlpha = a;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      const s = p.size, ratio = p.img.height / p.img.width;
+      ctx.drawImage(p.img, -s / 2, -s * ratio / 2, s, s * ratio);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- slide to pop ----------
+  let progress = 0, dragging = false, startX = 0, startP = 0, popped = false;
+  const trackLen = () => slider.clientWidth - 12 - knob.offsetWidth;
+  function setProgress(p) {
+    progress = Math.max(0, Math.min(1, p));
+    const x = progress * trackLen();
+    knob.style.transform = `translateX(${x}px)`;
+    fill.style.width = (52 + x) + 'px';
+    label.style.opacity = String(Math.max(0, 1 - progress * 1.8));
+    knob.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+    root.style.setProperty('--p', progress.toFixed(3));
+  }
+  knob.addEventListener('pointerdown', e => { if (popped) return; dragging = true; startX = e.clientX; startP = progress; knob.setPointerCapture(e.pointerId); });
+  knob.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    setProgress(startP + (e.clientX - startX) / trackLen());
+    if (progress >= .98) { dragging = false; pop(); }
+  });
+  ['pointerup', 'pointercancel'].forEach(t => knob.addEventListener(t, () => dragging = false));
+  knob.addEventListener('keydown', e => {
+    if (popped) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); setProgress(progress + .12); if (progress >= .98) pop(); }
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setProgress(1); pop(); }
+  });
+  // backup action: double-tap the box
+  let lastTap = 0;
+  boxwrap.addEventListener('pointerup', () => { const t = performance.now(); if (t - lastTap < 330 && !popped) { setProgress(1); pop(); } lastTap = t; });
+  $('#skip').addEventListener('click', () => { popped = true; enter(true); });
+
+  // ---------- box motion ----------
+  const sq = { v: 0, vel: 0 };
+  let nextPeek = 2;
+  function step(dt, t) {
+    if (!dragging && !popped && progress > 0) setProgress(progress - dt * 2.6);
+    sq.vel += (-sq.v * 320 - sq.vel * 13) * dt; sq.v += sq.vel * dt;
+    if (intro.hidden) return;
+    const p = popped ? 0 : progress;
+    const breathe = reduce ? 0 : Math.sin(t * 2.2) * .014;
+    const shake = reduce ? 0 : p * p * 7;
+    const sx = 1 + breathe * .6 + p * .1 - sq.v * .5, sy = 1 + breathe + p * .07 + sq.v;
+    const dx = (Math.random() - .5) * shake, dy = (Math.random() - .5) * shake * .6, rz = (Math.random() - .5) * shake * .5;
+    boxwrap.style.transform = `translate(${dx}px,${dy}px) rotate(${rz}deg) scale(${sx},${sy})`;
+    boxwrap.style.transformOrigin = '50% 92%';
+    // idle: a kernel sneaks out now and then; while sliding, more of them
+    if (!popped && !reduce && kernels.length) {
+      nextPeek -= dt * (1 + p * 10);
+      if (nextPeek <= 0) {
+        const o = boxTop();
+        spawnKernel({ ...o, w: o.w * .5 }, { min: 22, max: 34, vy: -rand(260, 420) * U, vx: rand(-90, 90) * U, life: .75, fade: 1 });
+        nextPeek = rand(1.6, 2.8);
+      }
+    }
+  }
+
+  function pop() {
+    if (popped) return;
+    popped = true;
+    setProgress(1);
+    store.set('ysc_seen', '1');
+    navigator.vibrate?.(40);
+    boxClosed.style.opacity = '0'; boxOpen.style.opacity = '1';
+    sq.v = -.2; sq.vel = 0;
+    if (!reduce) {
+      const o = boxTop();
+      for (let i = 0; i < 54; i++) spawnKernel(o);
+      for (let i = 0; i < 12; i++) spawnStar(o);
+      for (let i = 0; i < 70; i++) spawnSpark(o);
+      setTimeout(() => { const o2 = boxTop(); for (let i = 0; i < 12; i++) spawnKernel(o2, { vy: -rand(420, 760) * U }); }, 160);
+    }
+    setTimeout(() => enter(false), reduce ? 350 : 780);
+  }
+
+  // projector light → lobby (or hall when the poster QR carried ?hall=)
+  function enter(fromSkip) {
+    const flash = $('#flash');
+    const show = () => {
+      intro.hidden = true;
+      if (hallParam && HALLS[hallParam]) openHall(hallParam); else { lobby.hidden = false; revealLobby(); }
+    };
+    if (reduce || fromSkip) {
+      flash.animate([{ opacity: 0 }, { opacity: .9 }, { opacity: 0 }], { duration: fromSkip ? 500 : 700, easing: 'ease-in-out' });
+      setTimeout(show, fromSkip ? 250 : 350);
+      return;
+    }
+    flash.animate([
+      { opacity: 0, transform: 'scale(.6)', transformOrigin: '50% 0%' },
+      { opacity: 1, transform: 'scale(1.25)', transformOrigin: '50% 0%', offset: .38 },
+      { opacity: 1, transform: 'scale(1.25)', transformOrigin: '50% 0%', offset: .5 },
+      { opacity: 0, transform: 'scale(1.4)', transformOrigin: '50% 0%' }
+    ], { duration: 1500, easing: 'cubic-bezier(.3,.7,.2,1)' });
+    setTimeout(show, 600);
+  }
+  function revealLobby() {
+    if (reduce) return;
+    lobby.querySelector('.kv').animate([{ opacity: 0, transform: 'scale(1.08)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 1100, easing: 'cubic-bezier(.2,.7,.2,1)' });
+    lobby.querySelectorAll('.reveal').forEach((el, i) => el.animate(
+      [{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 620, delay: 380 + i * 80, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'backwards' }));
+  }
+  // Settings come from the admin screen (js/data.js → localStorage now, Google Sheet in stage 7).
+  // #announced=1 in the link previews the NOW SHOWING state without touching the admin switch.
+  const FESTIVAL = { ...YSC.DEFAULT_SETTINGS };
+  function applySettings(s) {
+    Object.assign(FESTIVAL, s);
+    if (params.get('announced') === '1') {
+      FESTIVAL.announced = true;
+      FESTIVAL.winners = { kids: FESTIVAL.winners.kids || 'robot', star: FESTIVAL.winners.star || 'tf1' };
+    }
+  }
+  applySettings({});
+  const refreshSettings = () => YSC.api.settings().then(s => {
+    const before = JSON.stringify([FESTIVAL.announced, FESTIVAL.winners, FESTIVAL.closed]);
+    applySettings(s);
+    return before !== JSON.stringify([FESTIVAL.announced, FESTIVAL.winners, FESTIVAL.closed]);
+  }).catch(() => false);
+  refreshSettings();
+  let currentHall = null;
+  let myVote = null; // stage 5 stores this with the entry
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // official Korean one-sheet (assets/posters/<id>.jpg, 교내 한정 사용); typographic poster stays underneath as fallback
+  const posterHTML = (m, extra = '') => `<div class="poster has-img ${extra}" style="--c1:${m.c1};--c2:${m.c2};--r:${m.r}">
+      <img class="p-img" src="assets/posters/${m.id}.jpg" alt="${esc(m.title)} 포스터" loading="lazy" decoding="async" onerror="this.parentNode.classList.remove('has-img');this.remove()">
+      <div class="p-top">Yulpo Starlight Cinema</div>
+      <img class="p-obj" src="assets/img/${m.obj}.png" alt="">
+      <div class="p-title">${esc(m.title)}</div><div class="p-en">${esc(m.en)}</div></div>`;
+
+  function dday() {
+    const ms = new Date(FESTIVAL.voteClose) - new Date();
+    if (ms <= 0) return '투표 마감';
+    const d = Math.floor(ms / 864e5);
+    return d > 0 ? `투표 마감 D-${d}` : '오늘 마감';
+  }
+
+  function renderHall(key) {
+    currentHall = key;
+    const h = HALLS[key], list = MOVIES[key];
+    const announced = FESTIVAL.announced;
+    const win = list.find(m => m.id === FESTIVAL.winners[key]) || list[0];
+    $('#hallChip').textContent = `${h.name.slice(0, 2)} ${h.tag} · ${h.time.split(' · ')[1]}`;
+    // poster wall: 12 rows × 6; cell (row r, col c) shows movie (r + c) % 3, so every 3 rows repeat
+    const wallItems = []; for (let i = 0; i < 72; i++) wallItems.push(posterHTML(list[(Math.floor(i / 6) + i % 6) % list.length]));
+    $('#wall').innerHTML = wallItems.join('');
+    hall.classList.toggle('nowshowing', announced);
+    $('#hero').querySelector('.ns-poster')?.remove();
+    if (!announced) {
+      $('#heroEyebrow').innerHTML = `<span>${h.tag} · ${esc(h.theme)}</span><span class="dday">${dday()}</span>`;
+      $('#heroTitle').innerHTML = '올해의 상영작은<br><em>여러분의 투표</em>로 결정됩니다';
+      $('#heroSub').textContent = `${h.name} 후보작 ${list.length}편 중 보고 싶은 영화 한 편을 골라 주세요. 한마디를 남기면 스타 이벤트에도 응모돼요.`;
+      $('#heroCta').textContent = '후보작 보러 가기';
+      $('#pickHead').innerHTML = '후보작 <small>PICK YOUR MOVIE</small>';
+    } else {
+      $('#heroEyebrow').innerHTML = `<span>${h.tag} · ${esc(h.name)}</span><span class="dday">상영작 발표</span>`;
+      $('#heroTitle').innerHTML = `Now Showing<br><em>${esc(win.title)}</em>`;
+      $('#heroSub').textContent = `${FESTIVAL.date} ${h.time.split(' · ')[1]} · ${FESTIVAL.place}. 여러분의 투표로 결정되었습니다!`;
+      $('#heroCta').textContent = '상영작 자세히 보기';
+      $('#pickHead').innerHTML = '후보작이었던 영화 <small>CANDIDATES</small>';
+      $('#hero').insertAdjacentHTML('beforeend', posterHTML(win, 'ns-poster'));
+    }
+    $('#demoNote').hidden = false;
+    $('#picks').innerHTML = list.map((m, i) => `
+      <button class="pick${myVote === m.id ? ' voted' : ''}" data-id="${m.id}" aria-label="기호 ${i + 1}번 ${esc(m.title)} 자세히 보기">
+        <span class="num" aria-hidden="true">${i + 1}</span>${posterHTML(m)}
+      </button>`).join('');
+    const infos = [
+      ['일시', `${FESTIVAL.date} ${h.time.split(' · ')[1]}`, h.name],
+      ['장소', FESTIVAL.place, '입구에서 티켓 화면을 보여 주세요'],
+      ['투표', '1인 1표', '학년·반·번호로 한 번만 참여해요'],
+      ['준비물', '상영작 발표 때 안내', '담요·방석 등은 발표와 함께 알려 드려요'],
+    ];
+    $('#infos').innerHTML = infos.map(([k, b, s]) => `<div class="info"><span class="k">${k}</span><b>${esc(b)}</b><span>${esc(s)}</span></div>`).join('');
+    $('#picks').querySelectorAll('.pick').forEach(el => el.addEventListener('click', () => openSheet(el.dataset.id, el)));
+    $('#heroCta').onclick = () => announced ? openSheet(win.id, $('#hero .ns-poster')) : $('#pickRow').scrollIntoView({ block: 'start' });
+    $('#heroInfo').onclick = () => $('#infoRow').scrollIntoView({ block: 'start' });
+  }
+
+  function openHall(key) {
+    myVote = myEntry && myEntry.hall === key ? myEntry.movie : (myVote && MOVIES[key].some(m => m.id === myVote) ? myVote : null);
+    renderHall(key);
+    refreshSettings().then(changed => { if (changed && !hall.hidden && currentHall === key) renderHall(key); });
+    [intro, lobby, $('#entry'), $('#ticket')].forEach(s => s.hidden = true);
+    hall.hidden = false; hall.scrollTop = 0;
+    if (!reduce) {
+      hall.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 450 });
+      hall.querySelector('.hero-copy').animate([{ opacity: 0, transform: 'translateY(24px)' }, { opacity: 1, transform: 'none' }], { duration: 700, delay: 150, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'backwards' });
+      hall.querySelectorAll('.pick').forEach((el, i) => el.animate([{ opacity: 0, transform: 'translateX(40px)' }, { opacity: 1, transform: 'none' }], { duration: 600, delay: 350 + i * 90, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'backwards' }));
+    }
+  }
+  hall.addEventListener('scroll', () => $('#topbar').classList.toggle('solid', hall.scrollTop > 40), { passive: true });
+
+  // ---------- detail sheet ----------
+  const sheet = $('#sheet'), panel = $('#panel');
+  let sheetMovie = null, lastFocus = null;
+  function openSheet(id, fromEl) {
+    const m = MOVIES[currentHall].find(x => x.id === id); if (!m) return;
+    sheetMovie = m; lastFocus = document.activeElement;
+    $('#dArt').innerHTML = posterHTML(m);
+    $('#dTitle').textContent = m.title; $('#dEn').textContent = m.en;
+    $('#dChips').innerHTML = `<span class="rate${m.rate.startsWith('12') ? ' r12' : ''}">${m.rate}</span><span>${m.min}분</span><span>${esc(m.genre)}</span>`;
+    $('#dLog').textContent = m.log;
+    $('#dPoints').innerHTML = m.points.map(p => `<li>${esc(p)}</li>`).join('');
+    $('#dQ').textContent = m.q;
+    const mine = myEntry && myEntry.hall === currentHall;
+    $('#dVote').textContent = mine ? '내 티켓 보기' : (FESTIVAL.announced || voteClosed()) ? '투표 마감' : '이 영화에 투표하기';
+    $('#dVote').hidden = false;
+    sheet.hidden = false; panel.scrollTop = 0;
+    $('#close').focus({ preventScroll: true });
+    if (reduce) return;
+    sheet.querySelector('.dim').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+    // grow the poster out of the tapped card
+    const src = fromEl?.querySelector?.('.poster') || fromEl;
+    const art = $('#dArt .poster');
+    const wide = matchMedia('(min-width:900px)').matches;
+    panel.animate(wide ? [{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'none' }] : [{ transform: 'translateY(100%)' }, { transform: 'none' }],
+      { duration: 460, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    if (src && art) {
+      const a = src.getBoundingClientRect();
+      requestAnimationFrame(() => {
+        const b = art.getBoundingClientRect();
+        if (!b.width) return;
+        art.animate([
+          { transformOrigin: '0 0', transform: `translate(${a.left - b.left}px,${a.top - b.top}px) scale(${a.width / b.width},${a.height / b.height})`, borderRadius: '8px' },
+          { transformOrigin: '0 0', transform: 'none', borderRadius: '0' }
+        ], { duration: 520, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      });
+    }
+  }
+  function closeSheet() {
+    if (sheet.hidden) return;
+    const done = () => { sheet.hidden = true; lastFocus?.focus?.({ preventScroll: true }); };
+    if (reduce) return done();
+    const wide = matchMedia('(min-width:900px)').matches;
+    sheet.querySelector('.dim').animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: 'forwards' });
+    panel.animate(wide ? [{ opacity: 1 }, { opacity: 0, transform: 'scale(.96)' }] : [{ transform: 'none' }, { transform: 'translateY(100%)' }],
+      { duration: 260, easing: 'ease-in', fill: 'forwards' }).onfinish = () => { panel.getAnimations().forEach(a => a.cancel()); sheet.querySelector('.dim').getAnimations().forEach(a => a.cancel()); done(); };
+  }
+  $('#close').addEventListener('click', closeSheet);
+  $('#dim').addEventListener('click', closeSheet);
+  $('#dOther').addEventListener('click', closeSheet);
+  addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+  // swipe the sheet down to close (phone)
+  let sy0 = null;
+  panel.addEventListener('touchstart', e => { sy0 = panel.scrollTop <= 0 ? e.touches[0].clientY : null; }, { passive: true });
+  panel.addEventListener('touchmove', e => { if (sy0 !== null && e.touches[0].clientY - sy0 > 90) { sy0 = null; closeSheet(); } }, { passive: true });
+  const API = YSC.api;   // submit / find (local now, Apps Script in stage 7)
+  let myEntry = null;
+  try { myEntry = JSON.parse(store.get('ysc_my') || 'null'); } catch {}
+  const rememberMine = e => { myEntry = e; store.set('ysc_my', JSON.stringify(e)); };
+
+  const toast = msg => { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2200); };
+  const scenes = [intro, lobby, hall, $('#entry'), $('#ticket')];
+  function showScene(el) {
+    scenes.forEach(s => s.hidden = s !== el);
+    el.scrollTop = 0;
+    if (!reduce) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 320 });
+  }
+  const voteClosed = () => YSC.isClosed(FESTIVAL);
+
+  // ---------- vote → entry form ----------
+  let lobbyGrade = null, formGrade = null, formMovie = null;
+  $('#dVote').addEventListener('click', () => {
+    if (!sheetMovie) return;
+    closeSheet();
+    if (myEntry && myEntry.hall === currentHall) return openTicket(myEntry, false);
+    if (FESTIVAL.announced || voteClosed()) return toast('투표가 마감되었어요');
+    openEntry(sheetMovie);
+  });
+  function openEntry(m) {
+    formMovie = m; myVote = m.id;
+    const h = HALLS[currentHall];
+    $('#entryChip').textContent = `${h.name.slice(0, 2)} ${h.tag}`;
+    $('#pickedArt').innerHTML = posterHTML(m);
+    $('#pickedTitle').textContent = m.title;
+    $('#qText').textContent = m.q;
+    $('#commentOpt').textContent = FESTIVAL.requireComment ? '(필수)' : '(선택 · 남기면 스타 이벤트 추첨에 들어가요)';
+    const grades = currentHall === 'kids' ? [1, 2, 3] : [4, 5, 6];
+    if (!grades.includes(formGrade)) formGrade = grades.includes(lobbyGrade) ? lobbyGrade : null;
+    $('#gchips').innerHTML = grades.map(g => `<button type="button" class="gchip" data-g="${g}" aria-pressed="${g === formGrade}">${g}학년</button>`).join('');
+    $('#gchips').querySelectorAll('.gchip').forEach(b => b.addEventListener('click', () => {
+      formGrade = +b.dataset.g;
+      $('#gchips').querySelectorAll('.gchip').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    }));
+    $('#entryErr').textContent = '';
+    updateCount();
+    showScene($('#entry'));
+  }
+  const comment = $('#comment'), count = $('#count');
+  function updateCount() {
+    const n = [...comment.value].length;
+    count.textContent = `${n} / 50`; count.classList.toggle('over', n > 50);
+  }
+  comment.addEventListener('input', updateCount);
+  $('#changePick').addEventListener('click', () => { showScene(hall); $('#pickRow').scrollIntoView({ block: 'start' }); });
+  $('#entryBack').addEventListener('click', () => showScene(hall));
+
+  $('#entryForm').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const err = $('#entryErr');
+    const text = comment.value.trim(), n = [...text].length;
+    const cls = parseInt($('#cls').value, 10), num = parseInt($('#num').value, 10), name = $('#name').value.trim();
+    const fail = (msg, el) => { err.textContent = msg; el?.focus(); };
+    if (FESTIVAL.requireComment && !n) return fail('한마디를 남겨 주세요.', comment);
+    if (n > 50) return fail('한마디는 50자까지 쓸 수 있어요.', comment);
+    if (!formGrade) return fail('학년을 골라 주세요.', $('#gchips .gchip'));
+    if (!(cls >= 1 && cls <= 20)) return fail('반을 숫자로 적어 주세요.', $('#cls'));
+    if (!(num >= 1 && num <= 40)) return fail('번호를 숫자로 적어 주세요.', $('#num'));
+    if (!/^[가-힣a-zA-Z\s]{2,10}$/.test(name)) return fail('이름을 2~10자로 적어 주세요.', $('#name'));
+    err.textContent = '';
+    const btn = $('#submitBtn'); btn.disabled = true; btn.textContent = '티켓 발권 중…';
+    try {
+      const res = await API.submit({ hall: currentHall, grade: formGrade, cls, num, name, movie: formMovie.id, comment: text });
+      if (res.status === 'conflict') return fail('이 학년·반·번호로 이미 다른 이름의 투표가 있어요. 담임 선생님께 알려 주세요.');
+      if (res.status === 'closed') return fail('투표가 마감되었어요.');
+      if (res.status === 'invalid') return fail(res.message || '입력한 내용을 다시 확인해 주세요.');
+      if (!res.entry) return fail('연결이 불안정해요. 잠시 후 다시 눌러 주세요.');
+      rememberMine(res.entry);
+      comment.value = ''; updateCount();
+      openTicket(res.entry, res.status === 'ok');
+      if (res.status === 'exists') toast('이미 투표했어요. 내 티켓을 보여 드릴게요');
+    } catch {
+      fail('연결이 불안정해요. 잠시 후 다시 눌러 주세요.');
+    } finally {
+      btn.disabled = false; btn.textContent = '투표하고 티켓 받기';
+    }
+  });
+
+  // ---------- ticket ----------
+  function barcode(seed) {
+    let h = 0; for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    let out = '';
+    for (let i = 0; i < 34; i++) { h = (h * 1103515245 + 12345) >>> 0; const w = 1 + (h >>> 29) % 3; const gap = 1 + (h >>> 26) % 3; out += `<i style="width:${w}px;margin-right:${gap}px"></i>`; }
+    return out;
+  }
+  function openTicket(e, fresh) {
+    const h = HALLS[e.hall], list = MOVIES[e.hall];
+    const pick = list.find(m => m.id === e.movie);
+    const win = FESTIVAL.announced ? list.find(m => m.id === FESTIVAL.winners[e.hall]) : null;
+    currentHall = e.hall;
+    $('#doneMsg').hidden = !fresh;
+    $('#tName').textContent = e.name;
+    $('#tClass').textContent = `${e.grade}학년 ${e.cls}반 ${e.num}번`;
+    $('#tShow').textContent = `${h.name.slice(0, 2)} · ${h.time.split(' · ')[1]}`;
+    $('#tDate').textContent = FESTIVAL.showDate;
+    $('#tMovie').textContent = win ? win.title : '상영작 발표 예정';
+    $('#tPick').textContent = pick ? `내가 고른 영화 · ${pick.title}` : '';
+    $('#tPlace').textContent = h.tag + ' · 체육관';
+    $('#tNo').textContent = `TICKET NO. ${e.ticketNo}`;
+    $('#tBar').innerHTML = barcode(e.ticketNo);
+    showScene($('#ticket'));
+    if (!fresh || reduce) return;
+    // print the pass out of the slot, then a short popcorn burst (same as the intro)
+    const pass = $('#pass');
+    pass.animate([{ clipPath: 'inset(0 0 100% 0)', transform: 'translateY(-30px)' }, { clipPath: 'inset(0 0 0 0)', transform: 'none' }],
+      { duration: 900, easing: 'cubic-bezier(.3,.7,.2,1)', delay: 150, fill: 'backwards' });
+    $('#doneMsg').animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 500 });
+    navigator.vibrate?.(30);
+    setTimeout(() => {
+      const r = pass.getBoundingClientRect();
+      const o = { x: r.left + r.width / 2, y: r.top + 40, w: r.width * .8 };
+      for (let i = 0; i < 26; i++) spawnKernel(o, { min: 26, max: 50, vy: -rand(520, 900) * U });
+      for (let i = 0; i < 8; i++) spawnStar(o);
+      for (let i = 0; i < 30; i++) spawnSpark(o);
+    }, 900);
+  }
+  $('#ticketBack').addEventListener('click', () => { openHall(currentHall); });
+  $('#homeBtn').addEventListener('click', () => { openHall(currentHall); });
+
+  // save as PNG: html2canvas loads only when needed
+  let h2cLoading = null;
+  const loadH2C = () => h2cLoading ||= new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = () => res(window.html2canvas); s.onerror = rej; document.head.appendChild(s);
+  });
+  $('#saveBtn').addEventListener('click', async () => {
+    const btn = $('#saveBtn'); btn.disabled = true; btn.textContent = '이미지 만드는 중…';
+    try {
+      const h2c = await loadH2C();
+      const canvas = await h2c($('#pass'), { backgroundColor: '#0B0B0F', scale: 2, useCORS: true });
+      const url = canvas.toDataURL('image/png');
+      const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (!ios) { try { const a = document.createElement('a'); a.href = url; a.download = `starlight-pass-${myEntry?.ticketNo || 'ticket'}.png`; a.click(); } catch {} }
+      const ov = document.createElement('div'); ov.className = 'saved';
+      ov.innerHTML = `<img alt="내 티켓 이미지"><p>${ios ? '이미지를 길게 눌러 <b>사진에 저장</b>하세요.' : '저장이 안 되면 이미지를 길게 누르거나 오른쪽 클릭해서 저장하세요.'}</p><button class="btn-sub">닫기</button>`;
+      ov.querySelector('img').src = url;
+      ov.querySelector('button').onclick = () => ov.remove();
+      document.body.appendChild(ov);
+    } catch {
+      toast('이미지를 만들지 못했어요. 화면을 캡처해 주세요');
+    } finally {
+      btn.disabled = false; btn.textContent = '티켓 이미지로 저장';
+    }
+  });
+
+  // ---------- lobby ----------
+  document.querySelectorAll('.grade').forEach(b => b.addEventListener('click', () => {
+    const key = b.dataset.hall;
+    lobbyGrade = parseInt(b.textContent, 10);
+    try { history.replaceState(null, '', '?hall=' + key); } catch {}
+    openHall(key);
+  }));
+  $('#toLobby').addEventListener('click', () => {
+    closeSheet(); showScene(lobby);
+    try { history.replaceState(null, '', location.pathname); } catch {}
+  });
+
+  // ---------- lookup ("내 티켓 다시 보기") ----------
+  const lookup = $('#lookup');
+  const closeLookup = () => { lookup.hidden = true; };
+  lookup.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeLookup));
+  $('#myticket').addEventListener('click', () => {
+    if (myEntry) return openTicket(myEntry, false);   // this device already holds a ticket
+    $('#lkErr').textContent = ''; lookup.hidden = false; $('#lkGrade').focus();
+  });
+  $('#lookupForm').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const q = { grade: parseInt($('#lkGrade').value, 10), cls: parseInt($('#lkCls').value, 10), num: parseInt($('#lkNum').value, 10), name: $('#lkName').value.trim() };
+    if (!q.grade || !q.cls || !q.num || !q.name) { $('#lkErr').textContent = '네 칸을 모두 채워 주세요.'; return; }
+    try {
+      const res = await API.find(q);
+      if (res.status !== 'ok') { $('#lkErr').textContent = '참여 기록을 찾지 못했어요. 학년·반·번호·이름을 다시 확인해 주세요.'; return; }
+      rememberMine(res.entry); closeLookup(); openTicket(res.entry, false);
+    } catch { $('#lkErr').textContent = '연결이 불안정해요. 잠시 후 다시 시도해 주세요.'; }
+  });
+  addEventListener('keydown', e => { if (e.key === 'Escape') closeLookup(); });
+
+  // ---------- admin: #admin mounts admin.html inside a shadow root (its own styles, same data) ----------
+  let adminHost = null;
+  async function openAdmin() {
+    if (adminHost) { adminHost.hidden = false; return; }
+    adminHost = document.createElement('div'); adminHost.id = 'adminHost';
+    document.body.appendChild(adminHost);
+    const sr = adminHost.attachShadow({ mode: 'open' });
+    try {
+      // markup + styles ship inside js/admin-view.js (generated from admin.html), so nothing is fetched at runtime
+      if (!window.YSC_ADMIN_VIEW) throw new Error('admin-view.js가 로드되지 않음');
+      if (!window.YSCAdmin) throw new Error('admin.js가 로드되지 않음');
+      sr.innerHTML = window.YSC_ADMIN_VIEW;
+      window.YSCAdmin(sr);
+    } catch (err) {
+      console.error(err);
+      const p = document.createElement('p');
+      p.style.cssText = 'color:#fff;padding:24px;font-family:sans-serif;line-height:1.6';
+      p.textContent = `관리자 화면을 열지 못했어요. 이 문구를 캡처해서 알려 주세요 → ${err && err.message}`;
+      sr.replaceChildren(p);
+    }
+  }
+  const route = () => { if (location.hash === '#admin') openAdmin(); else if (adminHost) adminHost.hidden = true; };
+  addEventListener('hashchange', route);
+  route();
+
+  setProgress(0);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

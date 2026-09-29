@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Starlight Control Room</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+/* Layout: operator console — tab bar on top, one working panel per tab; the LED draw is a separate 16:9 full-screen stage */
+:root,:host{
+  color-scheme: dark;
+  --ink:#0B0B0F; --ink-2:#15151A; --ink-3:#1E1E25; --line:#2B2B34; --red:#D62839; --corn:#FFC940; --cream:#F4EEE3; --mute:#A39EAA;
+  --ok:#3DBE7A; --warn:#FFB020; --bad:#FF5A6A;
+  --display:"Anton","Impact","Arial Narrow",sans-serif;
+  --body:"Pretendard Variable","Pretendard","IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+*{box-sizing:border-box}
+:host,body{display:block;margin:0;background:var(--ink);color:var(--cream);font-family:var(--body);font-size:15px;line-height:1.55;padding-inline:16px;padding-block:0 60px}
+button,input,select,textarea{font:inherit;color:inherit}
+[hidden]{display:none!important}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3{margin:0;text-wrap:balance}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--mute);text-transform:uppercase}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:10px;font-weight:800;background:var(--ink-3);border:1px solid var(--line)}
+.btn.main{background:var(--red);border-color:var(--red);color:#fff}
+.btn.gold{background:var(--corn);border-color:var(--corn);color:var(--ink)}
+.btn.danger{border-color:#5A2330;color:#FF9AA5}
+.btn.arm{background:#5A1420;border-color:var(--bad);color:#fff}
+.btn:focus-visible{outline:3px solid var(--corn);outline-offset:2px}
+.btn[disabled]{opacity:.45;cursor:default}
+input[type=text],input[type=password],input[type=number],input[type=datetime-local],select,textarea{background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(214,40,57,.25)}
+.card{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:18px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#26262D;border:1px solid #3A3A44;padding:10px 16px;border-radius:999px;font-size:14px;z-index:90}
+
+/* login */
+.login{min-height:100vh;display:grid;place-items:center}
+.login form{width:min(100%,380px);display:grid;gap:14px}
+.login h1{font-family:var(--display);font-weight:400;font-size:44px;line-height:.95;text-transform:uppercase}
+.login h1 span{color:var(--red)}
+.hint{font-size:13px;color:var(--mute)}
+.err{color:var(--bad);font-weight:700;min-height:1.3em;margin:0}
+
+/* header + tabs */
+header.top{position:sticky;top:0;z-index:10;background:rgba(11,11,15,.94);backdrop-filter:blur(8px);margin:0 -16px;padding:12px 16px 0;border-bottom:1px solid var(--line)}
+.toprow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-size:20px;letter-spacing:.05em}
+.brand span{color:var(--red)}
+.mode{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#3A2A0A;color:var(--warn)}
+.mode.live{background:#123522;color:var(--ok)}
+.toprow .spacer{flex:1}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin-top:10px;scrollbar-width:none}
+.tab{all:unset;cursor:pointer;padding:10px 14px;font-weight:800;border-bottom:3px solid transparent;white-space:nowrap;color:var(--mute)}
+.tab[aria-selected="true"]{color:var(--cream);border-color:var(--red)}
+.tab:focus-visible{outline:2px solid var(--corn)}
+main section{padding-top:22px;display:grid;gap:18px}
+
+/* status */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tile{padding:14px 16px;border-radius:12px;background:var(--ink-2);border:1px solid var(--line)}
+.tile b{display:block;font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.2}
+.tile span{font-size:13px;color:var(--mute)}
+.halls{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.hallcard h3{font-size:18px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.hallcard h3 small{font-size:13px;color:var(--mute);font-weight:600}
+.bars{display:grid;gap:12px;margin:14px 0}
+.bar{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center}
+.bar img{width:44px;aspect-ratio:2/3;object-fit:cover;border-radius:4px}
+.bar .t{font-weight:800;font-size:14px;display:flex;gap:6px;align-items:center}
+.bar .lead{font-size:11px;background:var(--corn);color:var(--ink);padding:1px 6px;border-radius:5px}
+.bar .track{height:10px;border-radius:6px;background:#26262D;margin-top:6px;overflow:hidden}
+.bar .track i{display:block;height:100%;background:linear-gradient(90deg,#8E1422,var(--red));border-radius:6px}
+.bar .n{font-variant-numeric:tabular-nums;font-weight:800;text-align:right;min-width:64px}
+.bar .n small{display:block;font-weight:500;color:var(--mute);font-size:12px}
+.announce{display:grid;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
+.announce .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.announce select{flex:1;min-width:160px}
+.state{font-size:13px;font-weight:800;padding:4px 10px;border-radius:999px;background:#26262D}
+.state.on{background:#123522;color:var(--ok)}
+.state.closed{background:#3A1A1F;color:#FF9AA5}
+.switches{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;letter-spacing:.08em;color:var(--mute);background:var(--ink-2);font-weight:700;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.grid-classes td{text-align:center;font-variant-numeric:tabular-nums}
+.grid-classes td.zero{color:#56525C}
+
+/* entries */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filters input[type=text]{flex:1;min-width:180px}
+.filters select{width:auto}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:14px;cursor:pointer}
+.flag{background:rgba(255,90,106,.18);color:#FFB3BB;border-radius:4px;padding:0 3px}
+.pill{font-size:12px;font-weight:800;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.in{background:#123522;color:var(--ok)}
+.pill.out{background:#3A1A1F;color:#FF9AA5}
+.pill.none{background:#26262D;color:var(--mute)}
+.pill.demo{background:#2A2440;color:#BBAEFF}
+.entry-actions{display:flex;gap:6px;flex-wrap:wrap}
+.entry-actions .btn{min-height:34px;padding:0 10px;font-size:13px}
+.comment{max-width:34ch}
+
+/* draw tab */
+.drawgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.winners{display:grid;gap:6px;margin:10px 0 0;padding:0;list-style:none;counter-reset:w}
+.winners li{counter-increment:w;display:flex;gap:8px;align-items:baseline;font-size:14px}
+.winners li::before{content:counter(w);font-family:var(--display);color:var(--corn);width:18px}
+.winners li.absent{color:var(--mute);text-decoration:line-through}
+
+/* settings */
+.form{display:grid;gap:14px;max-width:640px}
+.field{display:grid;gap:6px}
+.field label{font-weight:700;font-size:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ---------------- LED stage ---------------- */
+#led{position:fixed;inset:0;z-index:100;background:#000;display:grid;place-items:center;cursor:none}
+#led.show-ui{cursor:default}
+.stage{position:relative;width:min(100vw,177.78vh);aspect-ratio:16/9;overflow:hidden;container-type:inline-size;background:#07070A;color:#fff}
+.stage .bg{position:absolute;inset:0;background:url(assets/img/key-visual.jpg) 70% 50%/cover;opacity:.0;transition:opacity .8s}
+.stage[data-s="intermission"] .bg,.stage[data-s="end"] .bg{opacity:.45}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 70% at 50% 0%,rgba(255,236,200,.14),transparent 70%),radial-gradient(90% 60% at 50% 110%,rgba(214,40,57,.35),transparent 70%)}
+.scene{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;gap:1.2cqw;padding:4cqw;opacity:0;visibility:hidden;transition:opacity .5s,visibility .5s;z-index:1}
+.stage[data-s="intermission"] .s-inter,.stage[data-s="roll"] .s-roll,.stage[data-s="winner"] .s-win,.stage[data-s="reveal"] .s-rev,.stage[data-s="end"] .s-end{opacity:1;visibility:visible}
+.hallline{font-size:1.6cqw;font-weight:800;letter-spacing:.2em;color:var(--corn);text-transform:uppercase}
+.big{font-family:var(--display);font-weight:400;text-transform:uppercase;line-height:.9;letter-spacing:.01em}
+.s-inter .big{font-size:11cqw}
+.s-inter p{margin:0;font-size:2.8cqw;font-weight:800}
+.s-inter .ev{font-family:var(--display);font-size:3.2cqw;letter-spacing:.12em;color:var(--corn)}
+.s-roll .drum{font-size:2cqw;font-weight:800;letter-spacing:.3em;color:var(--mute)}
+.slot{font-size:9cqw;font-weight:900;letter-spacing:-.02em;min-height:1.2em;font-variant-numeric:tabular-nums}
+.slot small{display:block;font-size:3cqw;font-weight:700;color:#D8D2DC;letter-spacing:0}
+.s-win .big{font-size:5.4cqw;color:var(--corn)}
+.s-win .who{font-size:3.4cqw;font-weight:800;color:#E8E3EA}
+.s-win .name{font-size:12cqw;font-weight:900;line-height:1.05;letter-spacing:-.02em}
+.s-win p{margin:1cqw 0 0;font-size:2.6cqw;font-weight:800}
+.s-rev{gap:2cqw}
+.s-rev .q{font-size:2.2cqw;font-weight:700;color:var(--corn)}
+.s-rev blockquote{margin:0;font-size:6cqw;font-weight:900;line-height:1.3;letter-spacing:-.02em;max-width:70cqw;text-wrap:balance}
+.s-rev blockquote::before{content:"“";color:var(--red)} .s-rev blockquote::after{content:"”";color:var(--red)}
+.s-rev .by{font-size:2.4cqw;font-weight:700;color:#D8D2DC}
+.s-end .big{font-size:8cqw}
+.s-end p{margin:0;font-size:2.6cqw;font-weight:800}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.ledui{position:fixed;right:16px;bottom:16px;z-index:101;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;opacity:0;transition:opacity .3s;max-width:calc(100vw - 32px)}
+#led.show-ui .ledui{opacity:1}
+.ledui .btn{background:rgba(30,30,37,.92)}
+.ledinfo{position:fixed;left:16px;bottom:16px;z-index:101;font-size:13px;color:var(--mute);opacity:0;transition:opacity .3s}
+#led.show-ui .ledinfo{opacity:1}
+@media (prefers-reduced-motion:reduce){.scene{transition:none}}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div class="login" id="loginView">
+  <form id="loginForm" novalidate>
+    <div class="eyebrow">율포 별빛영화제 · 운영진 전용</div>
+    <h1>Starlight<br><span>Control Room</span></h1>
+    <div class="field"><label for="pw">관리자 비밀번호</label><input type="password" id="pw" autocomplete="current-password"></div>
+    <p class="err" id="loginErr" role="alert"></p>
+    <button class="btn main" type="submit">들어가기</button>
+    <p class="hint" id="modeHint"></p>
+    <a class="hint" id="backApp" href="index.html" style="color:var(--mute)">← 학생 화면으로</a>
+  </form>
+</div>
+
+<!-- ============ CONSOLE ============ -->
+<div class="wrap" id="app" hidden>
+  <header class="top">
+    <div class="toprow">
+      <div class="brand">YULPO <span>STARLIGHT</span> · 운영</div>
+      <span class="mode" id="modeChip"></span>
+      <span class="spacer"></span>
+      <button class="btn" id="reload">새로고침</button>
+      <button class="btn" id="logout">나가기</button>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="status" aria-selected="true">투표 현황</button>
+      <button class="tab" role="tab" data-tab="entries" aria-selected="false">응모 목록</button>
+      <button class="tab" role="tab" data-tab="draw" aria-selected="false">스타 이벤트 추첨</button>
+      <button class="tab" role="tab" data-tab="settings" aria-selected="false">설정</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- status -->
+    <section id="tab-status" role="tabpanel">
+      <div class="tiles" id="tiles"></div>
+      <div class="card">
+        <div class="switches">
+          <b>투표</b><span class="state" id="voteState"></span>
+          <span class="hint" id="closeInfo"></span>
+          <span class="spacer" style="flex:1"></span>
+          <button class="btn" id="toggleClose"></button>
+        </div>
+      </div>
+      <div class="halls" id="hallCards"></div>
+      <div class="card">
+        <h3 style="font-size:17px">학년·반별 참여 인원</h3>
+        <p class="hint" style="margin:4px 0 12px">반별 재적 인원을 설정에 넣으면 참여율(%)로 바꿔 보여 줄 수 있어요. 지금은 인원수만 셉니다.</p>
+        <div class="tablebox"><table class="grid-classes" id="classTable"></table></div>
+      </div>
+    </section>
+
+    <!-- entries -->
+    <section id="tab-entries" role="tabpanel" hidden>
+      <div class="filters">
+        <select id="fHall" aria-label="부 선택"><option value="">전체</option><option value="kids">1부 FAMILY</option><option value="star">2부 TOGETHER</option></select>
+        <input type="text" id="fText" placeholder="이름·한마디·티켓번호 검색" aria-label="검색">
+        <label class="chk"><input type="checkbox" id="fFlag"> 금칙어만</label>
+        <label class="chk"><input type="checkbox" id="fOut"> 추첨 제외만</label>
+        <button class="btn" id="csv">CSV 내려받기</button>
+      </div>
+      <p class="hint" id="entryCount" style="margin:0"></p>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>티켓</th><th>부</th><th>학년·반·번호</th><th>이름</th><th>영화</th><th>한마디</th><th>추첨</th><th></th></tr></thead>
+          <tbody id="entryRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- draw -->
+    <section id="tab-draw" role="tabpanel" hidden>
+      <div class="card">
+        <h3 style="font-size:17px">당일 진행 순서</h3>
+        <p class="hint" style="margin:6px 0 0">LED 화면 열기 → <b>인터미션</b> 화면이 뜹니다. 스페이스바(또는 → 키, 화면 클릭)를 누를 때마다 <b>두구두구 → 당첨 → 한마디 공개</b> 순서로 넘어가요. 정해진 인원을 다 뽑으면 "영화가 계속됩니다"로 끝납니다. 당첨자가 자리에 없으면 화면 오른쪽 아래 <b>불참 · 다시 뽑기</b>를 누르세요. 마우스를 움직이면 조작 버튼이 보입니다.</p>
+      </div>
+      <div class="drawgrid" id="drawCards"></div>
+      <div class="card">
+        <h3 style="font-size:17px">인터넷이 끊길 때를 대비해서</h3>
+        <p class="hint" style="margin:6px 0 12px">행사 전날 추첨 명단을 파일로 저장해 두세요. 당일 인터넷이 안 되면 이 페이지를 열어 파일을 불러오면 노트북만으로 추첨할 수 있어요.</p>
+        <div class="switches">
+          <button class="btn" id="exportList">추첨 명단 파일로 저장</button>
+          <label class="btn" for="importList">명단 파일 불러오기</label>
+          <input type="file" id="importList" accept="application/json,.json" hidden>
+          <span class="hint" id="offlineState"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- settings -->
+    <section id="tab-settings" role="tabpanel" hidden>
+      <form class="form card" id="settingsForm" novalidate>
+        <div class="field"><label for="sClose">투표 마감 일시</label><input type="datetime-local" id="sClose"></div>
+        <label class="chk"><input type="checkbox" id="sReq"> 한마디를 필수로 받기 (끄면 선택, 남긴 학생만 추첨 후보)</label>
+        <div class="two">
+          <div class="field"><label for="sDrawK">1부 추첨 인원</label><input type="number" id="sDrawK" min="1" max="10"></div>
+          <div class="field"><label for="sDrawS">2부 추첨 인원</label><input type="number" id="sDrawS" min="1" max="10"></div>
+        </div>
+        <label class="chk"><input type="checkbox" id="sMask"> LED 화면에서 이름 가운데 가리기 (예: 김○은)</label>
+        <div class="field"><label for="sBlock">금칙어 (쉼표로 구분)</label><textarea id="sBlock" rows="3"></textarea></div>
+        <p class="err" id="settingsErr" role="alert"></p>
+        <button class="btn main" type="submit">설정 저장</button>
+      </form>
+      <div class="card" id="demoTools">
+        <h3 style="font-size:17px">미리보기 도구 <span class="pill demo">이 기기에서만</span></h3>
+        <p class="hint" style="margin:6px 0 12px">구글 시트를 연결하기 전(로컬 모드)에만 보입니다. 예시 응모 데이터로 화면과 추첨을 시험해 볼 수 있어요. 예시 데이터는 보라색 "예시" 표시가 붙고, 한 번에 지울 수 있어요.</p>
+        <div class="switches">
+          <button class="btn gold" id="seed">예시 응모 채우기</button>
+          <button class="btn danger" id="unseed">예시 데이터 지우기</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ============ LED ============ -->
+<div id="led" hidden>
+  <div class="stage" id="stage" data-s="intermission">
+    <div class="bg"></div>
+    <div class="scene s-inter">
+      <div class="hallline" id="lHall"></div>
+      <div class="big">Intermission</div>
+      <p>잠시 후 영화가 계속됩니다</p>
+      <div class="ev">★ STARLIGHT EVENT TIME ★</div>
+    </div>
+    <div class="scene s-roll">
+      <div class="drum">두구두구두구…</div>
+      <div class="slot" id="slot"></div>
+    </div>
+    <div class="scene s-win">
+      <div class="big">Starlight Event Winner</div>
+      <div class="who" id="wWho"></div>
+      <div class="name" id="wName"></div>
+      <p>무대 앞으로 나와 한마디를 들려주세요!</p>
+    </div>
+    <div class="scene s-rev">
+      <div class="q" id="rQ"></div>
+      <blockquote id="rText"></blockquote>
+      <div class="by" id="rBy"></div>
+    </div>
+    <div class="scene s-end">
+      <div class="hallline" id="eHall"></div>
+      <div class="big">The show goes on</div>
+      <p>영화가 계속됩니다. 오늘의 별들에게 큰 박수!</p>
+    </div>
+    <canvas id="ledfx"></canvas>
+  </div>
+  <div class="ledinfo" id="ledInfo"></div>
+  <div class="ledui">
+    <button class="btn" id="lAbsent">불참 · 다시 뽑기</button>
+    <button class="btn" id="lInter">인터미션으로</button>
+    <button class="btn" id="lFull">전체화면</button>
+    <button class="btn gold" id="lNext">다음 ▶</button>
+    <button class="btn" id="lClose">닫기</button>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
