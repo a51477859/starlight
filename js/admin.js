@@ -311,7 +311,9 @@ window.YSCAdmin = (root = document) => {
     const pick = cands[crypto.getRandomValues(new Uint32Array(1))[0] % cands.length];
     setState('roll'); rolling = true;
     const slot = $('#slot');
-    const dur = reduce ? 400 : 3200, t0 = performance.now();
+    // 2.4s roll: the recorded cymbal crash lands exactly when the winner appears
+    const dur = reduce ? 400 : 2400, t0 = performance.now();
+    window.SFX?.drumroll(dur / 1000);
     let lastSwap = 0;
     const tick = now => {
       const p = Math.min(1, (now - t0) / dur);
@@ -331,6 +333,7 @@ window.YSCAdmin = (root = document) => {
     $('#wWho').textContent = `${e.grade}학년 ${e.cls}반`;
     $('#wName').textContent = nameOnLed(e.name);
     setState('winner'); burst(); info();
+    window.SFX?.winner();
     const draw = { hall: ledHall, key: YSC.keyOf(e), ticketNo: e.ticketNo, name: e.name, grade: e.grade, cls: e.cls, num: e.num, order: drawsOf(ledHall).length + 1, demo: !!e.demo };
     if (offline) { offline.draws.push({ ...draw, at: new Date().toISOString() }); saveOffline(); }
     else { try { const r = await api.addDraw(PW, draw); DATA.draws = r.draws; } catch { toast('당첨 기록을 저장하지 못했어요. 화면의 이름을 메모해 두세요'); DATA.draws.push(draw); } }
@@ -355,6 +358,9 @@ window.YSCAdmin = (root = document) => {
     else { try { const r = await api.addDraw(PW, { hall: ledHall, key, absentMark: true }); DATA.draws = r.draws; } catch { toast('불참 기록을 저장하지 못했어요'); } }
     current = null; info(); roll();
   }
+  const paintLedSound = () => { const b = $('#lSound'); if (b) b.textContent = window.SFX?.muted ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'; };
+  $('#lSound')?.addEventListener('click', () => { if (!window.SFX) return; SFX.setMuted(!SFX.muted); paintLedSound(); });
+  paintLedSound();
   $('#lNext').addEventListener('click', next);
   $('#lAbsent').addEventListener('click', markAbsent);
   $('#lInter').addEventListener('click', () => { if (!rolling) setState('intermission'); });
