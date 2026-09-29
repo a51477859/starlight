@@ -30,8 +30,11 @@ window.YSCAdmin = (root = document) => {
   $('#loginForm').addEventListener('submit', async e => {
     e.preventDefault();
     const pw = $('#pw').value;
-    try { await api.login(pw); PW = pw; ss.set('ysc_admin', pw); enter(); }
+    const btn = $('#loginForm button[type=submit]');
+    btn.disabled = true; btn.textContent = '확인 중… (처음엔 5초쯤 걸려요)'; $('#loginErr').textContent = '';
+    try { await api.login(pw); PW = pw; ss.set('ysc_admin', pw); btn.textContent = '불러오는 중…'; await enter(); }
     catch (err) { $('#loginErr').textContent = err.code === 'auth' ? '비밀번호가 맞지 않아요.' : '연결이 불안정해요. 잠시 후 다시 시도해 주세요.'; }
+    finally { btn.disabled = false; btn.textContent = '들어가기'; }
   });
   const embedded = root !== document;
   if (embedded) $('#backApp').setAttribute('href', '#');
@@ -77,10 +80,11 @@ window.YSCAdmin = (root = document) => {
     const s = S(), all = DATA.entries;
     const closeAt = new Date(s.voteClose);
     const left = closeAt - new Date();
-    const dleft = left > 0 ? `D-${Math.floor(left / 864e5)} · ${closeAt.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : '마감 시각 지남';
+    const dleft = left > 0 ? `D-${Math.floor(left / 864e5)}` : '지남';
+    const closeLabel = `투표 마감 · ${closeAt.getMonth() + 1}/${closeAt.getDate()} ${String(closeAt.getHours()).padStart(2, '0')}:${String(closeAt.getMinutes()).padStart(2, '0')}`;
     $('#tiles').innerHTML = [
       [all.length, '총 참여'], [byHall('kids').length, '1부 FAMILY'], [byHall('star').length, '2부 TOGETHER'],
-      [all.filter(e => e.comment).length, '한마디 남김'], [all.filter(e => flagsOf(e).length).length, '금칙어 확인 필요'], [dleft, '투표 마감']
+      [all.filter(e => e.comment).length, '한마디 남김'], [all.filter(e => flagsOf(e).length).length, '금칙어 확인 필요'], [dleft, closeLabel]
     ].map(([b, l]) => `<div class="tile"><b>${esc(b)}</b><span>${l}</span></div>`).join('');
     const closed = YSC.isClosed(s);
     $('#voteState').textContent = s.announced ? '상영작 발표됨' : closed ? '마감됨' : '진행 중';

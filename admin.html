@@ -19,7 +19,7 @@
   --body:"Pretendard Variable","Pretendard","IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
 }
 *{box-sizing:border-box}
-:host,body{display:block;margin:0;background:var(--ink);color:var(--cream);font-family:var(--body);font-size:15px;line-height:1.55;padding-inline:16px;padding-block:0 60px}
+:host,body{display:block;margin:0;background:var(--ink);color:var(--cream);font-family:var(--body);font-size:15px;line-height:1.55;word-break:keep-all;overflow-wrap:anywhere;padding-inline:16px;padding-block:0 60px}
 button,input,select,textarea{font:inherit;color:inherit}
 [hidden]{display:none!important}
 .wrap{max-width:1120px;margin:0 auto}
@@ -142,7 +142,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 .s-win .name{font-size:12cqw;font-weight:900;line-height:1.05;letter-spacing:-.02em}
 .s-win p{margin:1cqw 0 0;font-size:2.6cqw;font-weight:800}
 .s-rev{gap:2cqw}
-.s-rev .q{font-size:2.2cqw;font-weight:700;color:var(--corn)}
+.s-rev .q{font-size:2.2cqw;font-weight:700;color:var(--corn);white-space:pre-line}
 .s-rev blockquote{margin:0;font-size:6cqw;font-weight:900;line-height:1.3;letter-spacing:-.02em;max-width:70cqw;text-wrap:balance}
 .s-rev blockquote::before{content:"“";color:var(--red)} .s-rev blockquote::after{content:"”";color:var(--red)}
 .s-rev .by{font-size:2.4cqw;font-weight:700;color:#D8D2DC}
@@ -151,7 +151,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
 .ledui{position:fixed;right:16px;bottom:16px;z-index:101;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;opacity:0;transition:opacity .3s;max-width:calc(100vw - 32px)}
 #led.show-ui .ledui{opacity:1}
-.ledui .btn{background:rgba(30,30,37,.92)}
+.ledui .btn:not(.gold){background:rgba(30,30,37,.92)}
 .ledinfo{position:fixed;left:16px;bottom:16px;z-index:101;font-size:13px;color:var(--mute);opacity:0;transition:opacity .3s}
 #led.show-ui .ledinfo{opacity:1}
 @media (prefers-reduced-motion:reduce){.scene{transition:none}}
