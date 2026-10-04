@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="theme-color" content="#f3f0ea" />
+<title>Blow Ink Test</title>
+<style>
+  :root{
+    --bg:#ece8e0; --paper:#fbfaf6; --text:#151515; --muted:#77736b;
+    --glass:rgba(255,255,255,.76); --line:rgba(20,20,20,.08);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Apple SD Gothic Neo","Noto Sans KR",sans-serif;color:var(--text)}
+  body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  .app{height:100%;display:grid;grid-template-rows:auto 1fr auto;gap:10px;padding:12px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .title{min-width:0}
+  h1{font-size:18px;line-height:1.1;margin:0;font-weight:750;letter-spacing:-.4px}
+  .sub{font-size:11px;color:var(--muted);margin-top:4px}
+  .mic-pill{display:flex;align-items:center;gap:7px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:999px;padding:7px 10px;box-shadow:0 5px 18px rgba(0,0,0,.04)}
+  .dot{width:8px;height:8px;border-radius:50%;background:#aaa;box-shadow:0 0 0 4px rgba(0,0,0,.04)}
+  .dot.on{background:#34c759;box-shadow:0 0 0 4px rgba(52,199,89,.13)}
+  .mic-label{font-size:11px;font-weight:650;white-space:nowrap}
+  .meter{width:46px;height:5px;background:rgba(0,0,0,.08);border-radius:99px;overflow:hidden}
+  .meter i{display:block;height:100%;width:0%;background:#111;border-radius:inherit;transition:width 60ms linear}
+  .stage{position:relative;min-height:0;border-radius:28px;overflow:hidden;background:var(--paper);box-shadow:0 12px 42px rgba(56,45,25,.10),inset 0 0 0 1px rgba(70,55,30,.06)}
+  canvas{width:100%;height:100%;display:block;touch-action:none;background:transparent}
+  .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;text-align:center;padding:40px;transition:opacity .25s}
+  .hint.hide{opacity:0}
+  .hint-inner{font-size:15px;line-height:1.55;color:#817b70}
+  .hint-inner b{display:block;color:#292722;font-size:20px;margin-bottom:5px}
+  .blow-badge{position:absolute;left:50%;top:14px;transform:translate(-50%,-10px) scale(.96);opacity:0;background:rgba(20,20,20,.82);color:white;padding:7px 12px;border-radius:999px;font-size:12px;font-weight:700;backdrop-filter:blur(12px);transition:.16s}
+  .blow-badge.on{opacity:1;transform:translate(-50%,0) scale(1)}
+  .error{position:absolute;left:14px;right:14px;bottom:14px;background:rgba(255,59,48,.92);color:white;padding:10px 12px;border-radius:14px;font-size:12px;line-height:1.4;display:none}
+  .controls{display:grid;gap:9px}
+  .row{display:flex;align-items:center;gap:8px;min-width:0}
+  button{appearance:none;border:0;font:inherit;color:inherit}
+  .primary,.soft{height:42px;border-radius:14px;padding:0 14px;font-size:13px;font-weight:720;white-space:nowrap}
+  .primary{background:#151515;color:white;box-shadow:0 6px 18px rgba(0,0,0,.12)}
+  .soft{background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+  .soft:active,.primary:active{transform:scale(.98)}
+  .colors{display:flex;gap:6px;padding:5px;background:var(--glass);border:1px solid var(--line);border-radius:15px}
+  .color{width:31px;height:31px;border-radius:10px;position:relative}
+  .color.active:after{content:"";position:absolute;inset:-3px;border:2px solid #111;border-radius:13px}
+  .spacer{flex:1}
+  .dirs{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;flex:1;min-width:0}
+  .dir{height:36px;border-radius:11px;background:var(--glass);border:1px solid var(--line);font-size:16px}
+  .dir.active{background:#181818;color:white}
+  .sens{display:flex;align-items:center;gap:8px;min-width:105px;padding:0 9px;height:36px;background:var(--glass);border:1px solid var(--line);border-radius:11px}
+  .sens span{font-size:10px;color:var(--muted);white-space:nowrap}
+  input[type=range]{width:72px;accent-color:#111}
+  @media (max-height:700px){
+    .app{gap:7px;padding:9px}
+    .primary,.soft{height:38px}
+    .dir,.sens{height:33px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="title">
+      <h1>Blow Ink · Test</h1>
+      <div class="sub">잉크를 톡 찍고 마이크에 “후—” 불어보세요.</div>
+    </div>
+    <div class="mic-pill" aria-label="마이크 상태">
+      <span id="micDot" class="dot"></span>
+      <span id="micLabel" class="mic-label">MIC OFF</span>
+      <span class="meter"><i id="meterFill"></i></span>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="canvas"></canvas>
+    <div class="hint" id="hint">
+      <div class="hint-inner"><b>여기를 톡</b>잉크를 떨어뜨린 뒤<br>마이크에 바람을 불어보세요.</div>
+    </div>
+    <div class="blow-badge" id="blowBadge">후— 바람 감지!</div>
+    <div class="error" id="errorBox"></div>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <button id="micBtn" class="primary">마이크 켜기</button>
+      <button id="testBtn" class="soft">바람 테스트</button>
+      <button id="clearBtn" class="soft">초기화</button>
+      <div class="spacer"></div>
+      <div class="colors" aria-label="잉크 색">
+        <button class="color active" data-color="#111111" style="background:#111"></button>
+        <button class="color" data-color="#d53c49" style="background:#d53c49"></button>
+        <button class="color" data-color="#325fd1" style="background:#325fd1"></button>
+        <button class="color" data-color="#7450a8" style="background:#7450a8"></button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="dirs" aria-label="바람 방향">
+        <button class="dir" data-a="-2.356">↖</button>
+        <button class="dir" data-a="-1.571">↑</button>
+        <button class="dir" data-a="-0.785">↗</button>
+        <button class="dir active" data-a="0">→</button>
+        <button class="dir" data-a="0.785">↘</button>
+        <button class="dir" data-a="1.571">↓</button>
+        <button class="dir" data-a="2.356">↙</button>
+        <button class="dir" data-a="3.142">←</button>
+      </div>
+      <label class="sens"><span>감도</span><input id="sens" type="range" min="0.6" max="3.2" step="0.1" value="1.8"></label>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('canvas');
+  const stage = document.getElementById('stage');
+  const hint = document.getElementById('hint');
+  const ctx = canvas.getContext('2d', {alpha:false});
+  const ink = document.createElement('canvas');
+  const inkCtx = ink.getContext('2d');
+  const temp = document.createElement('canvas');
+  const tempCtx = temp.getContext('2d');
+  const micBtn = document.getElementById('micBtn');
+  const testBtn = document.getElementById('testBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const micDot = document.getElementById('micDot');
+  const micLabel = document.getElementById('micLabel');
+  const meterFill = document.getElementById('meterFill');
+  const blowBadge = document.getElementById('blowBadge');
+  const errorBox = document.getElementById('errorBox');
+  const sens = document.getElementById('sens');
+
+  let dpr = 1, selected = '#111111', windAngle = 0;
+  let hasInk = false, fronts = [], lastT = performance.now();
+  let manualBlow = 0, micStrength = 0, displayedStrength = 0;
+  let analyser = null, audioCtx = null, timeData = null, freqData = null, mediaStream = null;
+  let frameCount = 0;
+
+  function rgba(hex,a){
+    const h = hex.replace('#','');
+    const n = parseInt(h.length===3 ? h.split('').map(x=>x+x).join('') : h,16);
+    return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';
+  }
+
+  function resize(){
+    const r = stage.getBoundingClientRect();
+    const old = document.createElement('canvas');
+    old.width = ink.width || 1; old.height = ink.height || 1;
+    if(ink.width) old.getContext('2d').drawImage(ink,0,0);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.6);
+    const w = Math.max(1, Math.floor(r.width*dpr));
+    const h = Math.max(1, Math.floor(r.height*dpr));
+    canvas.width=w; canvas.height=h; ink.width=w; ink.height=h; temp.width=w; temp.height=h;
+    if(old.width>1 && old.height>1) inkCtx.drawImage(old,0,0,old.width,old.height,0,0,w,h);
+  }
+  addEventListener('resize', resize, {passive:true});
+  resize();
+
+  function addBlot(xCss,yCss){
+    const x=xCss*dpr, y=yCss*dpr;
+    const base=24*dpr;
+    inkCtx.save();
+    inkCtx.globalCompositeOperation='source-over';
+
+    const g=inkCtx.createRadialGradient(x,y,1,x,y,base*1.35);
+    g.addColorStop(0,rgba(selected,.90));
+    g.addColorStop(.5,rgba(selected,.72));
+    g.addColorStop(.83,rgba(selected,.26));
+    g.addColorStop(1,rgba(selected,0));
+    inkCtx.fillStyle=g;
+    inkCtx.beginPath(); inkCtx.arc(x,y,base*1.35,0,Math.PI*2); inkCtx.fill();
+
+    for(let i=0;i<55;i++){
+      const a=Math.random()*Math.PI*2;
+      const rr=Math.pow(Math.random(),.65)*base*1.15;
+      const px=x+Math.cos(a)*rr, py=y+Math.sin(a)*rr;
+      const pr=(1.5+Math.random()*4.5)*dpr;
+      inkCtx.fillStyle=rgba(selected,.025+Math.random()*.11);
+      inkCtx.beginPath(); inkCtx.arc(px,py,pr,0,Math.PI*2); inkCtx.fill();
+    }
+    inkCtx.restore();
+
+    for(let i=0;i<16;i++){
+      const a=Math.random()*Math.PI*2;
+      const rr=Math.random()*base*.45;
+      fronts.push({
+        x:x+Math.cos(a)*rr, y:y+Math.sin(a)*rr,
+        px:x, py:y, color:selected,
+        width:(.7+Math.random()*2.2)*dpr,
+        drift:(Math.random()-.5)*.18,
+        energy:.55+Math.random()*.75
+      });
+    }
+    hasInk=true; hint.classList.add('hide');
+  }
+
+  canvas.addEventListener('pointerdown', e=>{
+    const r=canvas.getBoundingClientRect();
+    addBlot(e.clientX-r.left,e.clientY-r.top);
+  });
+
+  document.querySelectorAll('.color').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.color').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); selected=b.dataset.color;
+  }));
+  document.querySelectorAll('.dir').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.dir').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); windAngle=Number(b.dataset.a);
+  }));
+
+  clearBtn.addEventListener('click',()=>{
+    inkCtx.clearRect(0,0,ink.width,ink.height);
+    tempCtx.clearRect(0,0,temp.width,temp.height);
+    fronts=[]; hasInk=false; hint.classList.remove('hide');
+  });
+
+  testBtn.addEventListener('pointerdown',()=>{ manualBlow=1; });
+  testBtn.addEventListener('click',()=>{ manualBlow=1; });
+  testBtn.addEventListener('pointerup',()=>{ manualBlow=Math.max(manualBlow,.65); });
+
+  async function startMic(){
+    errorBox.style.display='none';
+    try{
+      if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('이 브라우저에서 마이크 API를 사용할 수 없습니다.');
+      mediaStream = await navigator.mediaDevices.getUserMedia({
+        audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1},
+        video:false
+      });
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = audioCtx || new AC();
+      await audioCtx.resume();
+      const src=audioCtx.createMediaStreamSource(mediaStream);
+      analyser=audioCtx.createAnalyser();
+      analyser.fftSize=2048;
+      analyser.smoothingTimeConstant=.22;
+      src.connect(analyser);
+      timeData=new Float32Array(analyser.fftSize);
+      freqData=new Uint8Array(analyser.frequencyBinCount);
+      micDot.classList.add('on');
+      micLabel.textContent='MIC ON';
+      micBtn.textContent='마이크 켜짐';
+      micBtn.disabled=true;
+      micBtn.style.opacity='.68';
+    }catch(err){
+      errorBox.textContent='마이크를 켜지 못했어요. Safari의 마이크 권한을 확인한 뒤 다시 눌러주세요. ('+(err.message||err)+')';
+      errorBox.style.display='block';
+    }
+  }
+  micBtn.addEventListener('click', startMic);
+
+  function readMic(){
+    if(!analyser || !audioCtx) return 0;
+    analyser.getFloatTimeDomainData(timeData);
+    analyser.getByteFrequencyData(freqData);
+    let sum=0;
+    for(let i=0;i<timeData.length;i++) sum += timeData[i]*timeData[i];
+    const rms=Math.sqrt(sum/timeData.length);
+
+    const nyq=audioCtx.sampleRate/2;
+    const binHz=nyq/freqData.length;
+    const avgBand=(lo,hi)=>{
+      const a=Math.max(0,Math.floor(lo/binHz)), b=Math.min(freqData.length-1,Math.ceil(hi/binHz));
+      let s=0,n=0; for(let i=a;i<=b;i++){s+=freqData[i];n++} return n?s/n:0;
+    };
+    const low=avgBand(120,1100);
+    const high=avgBand(1500,8500);
+    const noisiness=high/(low+20);
+    const sensitivity=Number(sens.value);
+    const level=Math.max(0,(rms-.012))*9*sensitivity;
+    const texture=Math.max(.18,Math.min(1.15,(noisiness-.18)*1.6));
+    let v=Math.max(0,Math.min(1,level*texture));
+    if(rms>.12) v=Math.max(v,Math.min(1,(rms-.08)*5*sensitivity));
+    return v;
+  }
+
+  function smear(strength,dt){
+    if(!hasInk || strength<.025) return;
+    tempCtx.clearRect(0,0,temp.width,temp.height);
+    tempCtx.drawImage(ink,0,0);
+    const dist=(.45 + strength*3.0)*dpr*(dt/16.67);
+    const dx=Math.cos(windAngle)*dist, dy=Math.sin(windAngle)*dist;
+
+    inkCtx.save();
+    inkCtx.globalAlpha=.025 + strength*.06;
+    inkCtx.filter='blur('+(0.25+strength*.7)+'px)';
+    inkCtx.drawImage(temp,dx,dy);
+    inkCtx.restore();
+
+    const chance=.02 + strength*.08;
+    inkCtx.save();
+    inkCtx.lineCap='round';
+    inkCtx.lineJoin='round';
+    const next=[];
+    for(let i=0;i<fronts.length;i++){
+      const f=fronts[i];
+      const oldX=f.x, oldY=f.y;
+      const localA=windAngle+f.drift+(Math.random()-.5)*(.08+strength*.10);
+      const speed=(.9+strength*7.5)*dpr*f.energy*(dt/16.67);
+      f.x += Math.cos(localA)*speed;
+      f.y += Math.sin(localA)*speed;
+      f.energy *= .9985;
+      inkCtx.strokeStyle=rgba(f.color,.035+strength*.085);
+      inkCtx.lineWidth=Math.max(.45*dpr,f.width*(.9+strength*.22));
+      inkCtx.beginPath(); inkCtx.moveTo(oldX,oldY); inkCtx.quadraticCurveTo((oldX+f.x)/2+(Math.random()-.5)*1.5*dpr,(oldY+f.y)/2+(Math.random()-.5)*1.5*dpr,f.x,f.y); inkCtx.stroke();
+
+      if(Math.random()<chance){
+        inkCtx.fillStyle=rgba(f.color,.05+strength*.08);
+        inkCtx.beginPath(); inkCtx.arc(f.x+(Math.random()-.5)*4*dpr,f.y+(Math.random()-.5)*4*dpr,(.55+Math.random()*1.9)*dpr,0,Math.PI*2); inkCtx.fill();
+      }
+      if(Math.random()<strength*.008 && fronts.length+next.length<260){
+        next.push({...f,drift:f.drift+(Math.random()-.5)*.35,width:f.width*.7,energy:f.energy*.82});
+      }
+      if(f.x>-30 && f.x<ink.width+30 && f.y>-30 && f.y<ink.height+30 && f.energy>.12) next.push(f);
+    }
+    fronts=next.slice(-260);
+    inkCtx.restore();
+  }
+
+  function render(t){
+    const dt=Math.min(34,t-lastT||16.67); lastT=t; frameCount++;
+    micStrength=readMic();
+    manualBlow*=.94;
+    const target=Math.max(micStrength,manualBlow);
+    displayedStrength += (target-displayedStrength)*(target>displayedStrength?.38:.16);
+    meterFill.style.width=Math.min(100,displayedStrength*100)+'%';
+    blowBadge.classList.toggle('on', displayedStrength>.10);
+
+    smear(displayedStrength,dt);
+
+    ctx.save();
+    ctx.fillStyle='#fbfaf6'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(ink,0,0);
+    ctx.restore();
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>
