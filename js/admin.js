@@ -395,11 +395,11 @@ window.YSCAdmin = (root = document) => {
   }
   let last = performance.now();
   (function loop(now) {
-    const dt = Math.min((now - last) / 1000, 1 / 30); last = now;
+    const realDt = Math.min((now - last) / 1000, 1), dt = Math.min(realDt, 1 / 15); last = now;
     fctx.clearRect(0, 0, FW, FH);
     for (let i = parts.length - 1; i >= 0; i--) {
-      const p = parts[i]; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
-      if (p.y > FH + 150) { parts.splice(i, 1); continue; }
+      const p = parts[i]; p.age = (p.age || 0) + realDt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+      if (p.y > FH + 150 || p.age > 4) { parts.splice(i, 1); continue; }   // gone within 4 real seconds
       fctx.save(); fctx.translate(p.x, p.y); fctx.rotate(p.rot);
       const h = p.size * p.img.height / p.img.width; fctx.drawImage(p.img, -p.size / 2, -h / 2, p.size, h); fctx.restore();
     }

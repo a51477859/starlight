@@ -599,14 +599,14 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     parts.push({
       img, x: o.x + rand(-o.w * .28, o.w * .28), y: o.y + rand(-10, 10) * U,
       vx: opts.vx ?? rand(-1, 1) * rand(160, 520) * U, vy: opts.vy ?? -rand(620, 1180) * U,
-      rot: rand(0, 6.28), vr: rand(-9, 9), size, life: opts.life || 99, age: 0, fade: opts.fade || 0, g: 1900 * U
+      rot: rand(0, 6.28), vr: rand(-9, 9), size, life: opts.life || 3.5, age: 0, fade: opts.fade || 0, g: 1900 * U
     });
   }
   function spawnStar(o) {
     if (!stars.length) return;
     const img = stars[(Math.random() * stars.length) | 0];
     parts.push({ img, x: o.x + rand(-o.w * .2, o.w * .2), y: o.y, vx: rand(-1, 1) * rand(120, 420) * U, vy: -rand(700, 1250) * U,
-      rot: rand(-.4, .4), vr: rand(-3, 3), size: rand(22, 46) * U, life: 99, age: 0, fade: 0, g: 1500 * U, twinkle: true });
+      rot: rand(-.4, .4), vr: rand(-3, 3), size: rand(22, 46) * U, life: 3.5, age: 0, fade: 0, g: 1500 * U, twinkle: true });
   }
   function spawnSpark(o) {
     const a = rand(0, Math.PI * 2), sp = rand(200, 900) * U;
@@ -616,7 +616,8 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
 
   let last = performance.now();
   function frame(now) {
-    const dt = Math.min((now - last) / 1000, 1 / 30); last = now;
+    // physics step is capped so a long pause never teleports particles; lifetimes count real seconds
+    const realDt = Math.min((now - last) / 1000, 1), dt = Math.min(realDt, 1 / 15); last = now;
     step(dt, now / 1000);
     ctx.clearRect(0, 0, W, H);
     // spotlight dust (intro only)
@@ -632,7 +633,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     }
     for (let i = parts.length - 1; i >= 0; i--) {
       const p = parts[i];
-      p.age += dt;
+      p.age += realDt;
       p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= (1 - .35 * dt);
       if (p.rot !== undefined) p.rot += p.vr * dt;
       if (p.age > p.life || p.y > H + 120) { parts.splice(i, 1); continue; }
@@ -645,6 +646,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
       }
       let a = 1;
       if (p.fade) a = Math.max(0, 1 - p.age / p.life);
+      else if (p.life - p.age < .6) a = Math.max(0, (p.life - p.age) / .6);   // every particle is gone within its life
       if (p.twinkle) a *= .75 + .25 * Math.sin(p.age * 18);
       ctx.globalAlpha = a;
       ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
