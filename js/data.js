@@ -108,7 +108,9 @@ window.YSC = (() => {
     // ----- student -----
     async settings() {
       if (API_URL) return { ...DEFAULT_SETTINGS, ...(await post({ action: 'settings' })) };
-      return settingsLocal();
+      const s = settingsLocal(), c = { kids: 0, star: 0, total: 0 };   // local preview: count this browser's entries
+      Object.values(L.entries()).forEach(e => { if (e.hall in c) { c[e.hall]++; c.total++; } });
+      return { ...s, counts: c };
     },
     async submit(e) {
       if (API_URL) return post({ action: 'submit', ...e });
