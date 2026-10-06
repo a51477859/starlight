@@ -199,7 +199,7 @@ button{font:inherit;color:inherit}
 .poster .p-title{position:absolute;left:7cqw;right:7cqw;bottom:16cqw;font-size:13cqw;font-weight:900;line-height:1.08;letter-spacing:-.03em;text-wrap:balance}
 .poster .p-en{position:absolute;left:7cqw;bottom:8cqw;font-family:var(--display);font-size:6cqw;letter-spacing:.08em;opacity:.75;text-transform:uppercase}
 .poster .p-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 0;z-index:1}
-.poster.has-img>:not(.p-img){display:none}
+.poster.has-img>:not(.p-img):not(.sheen){display:none}
 .poster .p-obj{position:absolute;right:-6cqw;top:18cqw;width:52cqw;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));transform:rotate(var(--r,12deg))}
 
 /* detail sheet */
@@ -325,8 +325,53 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
 .lookup h2{margin:0;font-size:22px;font-weight:900}
 @media (min-width:900px){ .lookup .panel{display:grid;grid-template-columns:1fr;border-radius:20px} }
 
+/* ---------- shine: holographic sheen + tilt on posters and the pass ---------- */
+@property --fa{syntax:'<angle>';inherits:false;initial-value:0deg}
+.sheen{position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.4) 47%,rgba(255,226,160,.3) 52%,transparent 64%);
+  background-size:300% 100%;background-position:var(--sx,130%) 0;mix-blend-mode:screen;opacity:0;transition:opacity .25s}
+.tilt{transform:perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .3s ease-out}
+.tilt.live{transition:transform .06s linear}
+.tilt.live>.sheen{opacity:1}
+.sheen.sweep{opacity:1;animation:sweep .9s ease-out}
+@keyframes sweep{from{background-position:130% 0}to{background-position:-30% 0}}
+.pass>.sheen{opacity:.85;animation:glint 5s ease-in-out infinite}
+.pass>.foil{position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;mix-blend-mode:color-dodge;opacity:.08;
+  background:conic-gradient(from var(--fa) at 72% 18%,#ff6b6b,#ffd166,#7bdff2,#b2f7ef,#cdb4db,#ff6b6b);animation:foil 9s linear infinite}
+@keyframes glint{0%,62%{background-position:130% 0}84%,100%{background-position:-30% 0}}
+@keyframes foil{to{--fa:360deg}}
+.pass.sway:not(.live){animation:sway2 7s ease-in-out infinite}
+@keyframes sway2{50%{transform:perspective(800px) rotateY(3.5deg) rotateX(1.5deg)}}
+
+/* ---------- VOTED stamp ---------- */
+.pmovie{padding-right:108px}
+.stamp{position:absolute;z-index:4;right:16px;bottom:134px;display:grid;justify-items:center;gap:1px;padding:7px 12px 6px;border:3px solid #FF4D5E;border-radius:10px;
+  color:#FF4D5E;transform:rotate(-14deg);box-shadow:inset 0 0 0 2px rgba(255,77,94,.35);pointer-events:none;opacity:.92;
+  -webkit-mask-image:radial-gradient(circle at 30% 40%,#000 55%,rgba(0,0,0,.75) 70%,#000 85%);mask-image:radial-gradient(circle at 30% 40%,#000 55%,rgba(0,0,0,.75) 70%,#000 85%)}
+.stamp b{font-family:var(--display);font-weight:400;font-size:28px;line-height:1;letter-spacing:.08em}
+.stamp small{font-size:10px;font-weight:800;letter-spacing:.06em}
+
+/* ---------- ticket colours ---------- */
+.pass{--ta:#D62839;--tb:#8E1422}
+.pass-head{background:linear-gradient(135deg,var(--ta),var(--tb))}
+.tcolors{display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--mute)}
+.tcolor{all:unset;cursor:pointer;width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 0 0 2px #2C2C34}
+.tcolor[aria-pressed="true"]{box-shadow:0 0 0 2px #0B0B0F,0 0 0 4px var(--corn)}
+.tcolor:focus-visible{outline:2px solid var(--corn);outline-offset:4px}
+
+/* ---------- intro: beam that follows the finger ---------- */
+.beam{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;
+  background:radial-gradient(circle at var(--bx,50%) var(--by,58%),rgba(255,240,214,.16),rgba(255,240,214,.05) 22vmin,transparent 40vmin)}
+
+/* ---------- film grain + flicker over the whole app ---------- */
+#grain{position:fixed;inset:-50%;z-index:25;pointer-events:none;opacity:.07;background-size:180px 180px;animation:grain 1s steps(6) infinite,flick 5s ease-in-out infinite}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-4%,3%)}40%{transform:translate(3%,-5%)}60%{transform:translate(-2%,4%)}80%{transform:translate(5%,1%)}100%{transform:translate(0,0)}}
+@keyframes flick{0%,100%{opacity:.07}45%{opacity:.07}50%{opacity:.1}55%{opacity:.06}}
+
 @media (prefers-reduced-motion:reduce){
   .spot,.slider .label i,.myticket img,.wall,.event img{animation:none}
+  .pass>.sheen,.pass>.foil,.pass.sway,#grain{animation:none}
+  .tilt{transform:none}
 }
 </style>
 
@@ -334,6 +379,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
 <body>
 <main id="intro" class="scene" aria-label="인트로">
   <div class="spot" aria-hidden="true"></div>
+  <div class="beam" id="beam" aria-hidden="true"></div>
   <p class="edition"><b>제2회</b> 율포 별빛영화제</p>
   <div class="stagebox">
     <h1 class="marquee" aria-label="YULPO STARLIGHT CINEMA"><span>Yulpo</span><span>Starlight</span><span>Cinema</span></h1>
@@ -499,6 +545,14 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
         <div class="barcode" id="tBar" aria-hidden="true"></div>
         <div class="tno" id="tNo"></div>
       </div>
+      <div class="stamp" id="stamp" aria-label="투표 완료"><b>VOTED</b><small>투표 완료 ★ 2026</small></div>
+      <i class="foil" aria-hidden="true"></i><i class="sheen" aria-hidden="true"></i>
+    </div>
+    <div class="tcolors" role="group" aria-label="티켓 색 고르기">
+      <span>티켓 색</span>
+      <button class="tcolor" data-tc="red" style="--a:#D62839;--b:#8E1422" aria-label="레드"></button>
+      <button class="tcolor" data-tc="gold" style="--a:#E8A33D;--b:#8A5A12" aria-label="골드"></button>
+      <button class="tcolor" data-tc="navy" style="--a:#2F5AA8;--b:#14254D" aria-label="네이비"></button>
     </div>
     <div class="ticket-actions">
       <button class="btn-main" id="saveBtn">티켓 이미지로 저장</button>
@@ -551,12 +605,13 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
 </div>
 
 <canvas id="fx" aria-hidden="true"></canvas>
+<div id="grain" aria-hidden="true"></div>
 <div id="flash" aria-hidden="true"></div>
 
-<script src="js/data.js?v=b8a5b173"></script>
-<script src="js/sfx.js?v=b8a5b173"></script>
-<script src="js/admin-view.js?v=b8a5b173"></script>
-<script src="js/admin.js?v=b8a5b173"></script>
+<script src="js/data.js?v=5f087f79"></script>
+<script src="js/sfx.js?v=5f087f79"></script>
+<script src="js/admin-view.js?v=5f087f79"></script>
+<script src="js/admin.js?v=5f087f79"></script>
 <script>
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -792,8 +847,29 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
   let currentHall = null;
   let myVote = null; // stage 5 stores this with the entry
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // ---------- shine: sweep on tap, tilt + moving glare under a mouse ----------
+  const canHover = matchMedia('(hover:hover) and (pointer:fine)').matches;
+  function sweep(sheen) { if (!sheen || reduce) return; sheen.classList.remove('sweep'); void sheen.offsetWidth; sheen.classList.add('sweep'); }
+  function attachShine(el) {
+    const sheen = el && el.querySelector(':scope > .sheen');
+    if (!sheen || reduce || el.dataset.shine) return;
+    el.dataset.shine = '1'; el.classList.add('tilt');
+    if (canHover) {
+      el.addEventListener('pointermove', e => {
+        const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        el.classList.add('live');
+        el.style.setProperty('--ry', ((x - .5) * 14).toFixed(2) + 'deg');
+        el.style.setProperty('--rx', ((.5 - y) * 10).toFixed(2) + 'deg');
+        el.style.setProperty('--sx', (130 - x * 160).toFixed(1) + '%');
+      });
+      el.addEventListener('pointerleave', () => { el.classList.remove('live'); ['--rx', '--ry', '--sx'].forEach(p => el.style.removeProperty(p)); });
+    }
+    el.addEventListener('pointerdown', () => sweep(sheen));
+  }
+
   // official Korean one-sheet (assets/posters/<id>.jpg, 교내 한정 사용); typographic poster stays underneath as fallback
   const posterHTML = (m, extra = '') => `<div class="poster has-img ${extra}" style="--c1:${m.c1};--c2:${m.c2};--r:${m.r}">
+      <i class="sheen" aria-hidden="true"></i>
       <img class="p-img" src="${YSC.posterUrl ? YSC.posterUrl(m.id) : `assets/posters/${m.id}.jpg`}" alt="${esc(m.title)} 포스터" loading="lazy" decoding="async" onerror="this.parentNode.classList.remove('has-img');this.remove()">
       <div class="p-top">Yulpo Starlight Cinema</div>
       <img class="p-obj" src="assets/img/${m.obj}.png" alt="">
@@ -843,7 +919,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
       ['준비물', '상영작 발표 때 안내', '담요·방석 등은 발표와 함께 알려 드려요'],
     ];
     $('#infos').innerHTML = infos.map(([k, b, s]) => `<div class="info"><span class="k">${k}</span><b>${esc(b)}</b><span>${esc(s)}</span></div>`).join('');
-    $('#picks').querySelectorAll('.pick').forEach(el => el.addEventListener('click', () => openSheet(el.dataset.id, el)));
+    $('#picks').querySelectorAll('.pick').forEach(el => { el.addEventListener('click', () => openSheet(el.dataset.id, el)); attachShine(el.querySelector('.poster')); });
     $('#heroCta').onclick = () => announced ? openSheet(win.id, $('#hero .ns-poster')) : $('#pickRow').scrollIntoView({ block: 'start' });
     $('#heroInfo').onclick = () => $('#infoRow').scrollIntoView({ block: 'start' });
   }
@@ -869,6 +945,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     const m = MOVIES[currentHall].find(x => x.id === id); if (!m) return;
     sheetMovie = m; lastFocus = document.activeElement;
     $('#dArt').innerHTML = posterHTML(m);
+    attachShine($('#dArt .poster')); setTimeout(() => sweep($('#dArt .sheen')), 520);
     $('#dTitle').textContent = m.title; $('#dEn').textContent = m.en;
     $('#dChips').innerHTML = `<span class="rate${m.rate.startsWith('12') ? ' r12' : ''}">${m.rate}</span><span>${m.min}분</span><span>${esc(m.genre)}</span>`;
     $('#dLog').textContent = m.log;
@@ -1020,15 +1097,27 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     $('#tPlace').textContent = h.tag + ' · 체육관';
     $('#tNo').textContent = `TICKET NO. ${e.ticketNo}`;
     $('#tBar').innerHTML = barcode(e.ticketNo);
+    applyTicketColor(ticketColorOf(e));
     showScene($('#ticket'));
-    if (!fresh || reduce) return;
-    // print the pass out of the slot, then a short popcorn burst (same as the intro)
-    const pass = $('#pass');
+    const pass = $('#pass'), stamp = $('#stamp');
+    pass.classList.remove('sway');
+    if (!fresh || reduce) { if (!reduce) pass.classList.add('sway'); return; }
+    // print the pass out of the slot → VOTED stamp lands → popcorn burst (same as the intro)
     pass.animate([{ clipPath: 'inset(0 0 100% 0)', transform: 'translateY(-30px)' }, { clipPath: 'inset(0 0 0 0)', transform: 'none' }],
       { duration: 900, easing: 'cubic-bezier(.3,.7,.2,1)', delay: 150, fill: 'backwards' });
     $('#doneMsg').animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 500 });
     navigator.vibrate?.(30);
     SFX.printer(1.0);
+    stamp.animate([
+      { opacity: 0, transform: 'rotate(-14deg) scale(2.6)' },
+      { opacity: 1, transform: 'rotate(-14deg) scale(.92)', offset: .72 },
+      { opacity: .92, transform: 'rotate(-14deg) scale(1)' }
+    ], { duration: 360, delay: 1100, easing: 'cubic-bezier(.3,.9,.3,1.15)', fill: 'backwards' });
+    SFX.stamp(1.05);
+    setTimeout(() => {
+      navigator.vibrate?.([18, 30, 12]);
+      pass.animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-3px,2px)' }, { transform: 'translate(2px,-1px)' }, { transform: 'none' }], { duration: 180 });
+    }, 1350);
     setTimeout(() => {
       const r = pass.getBoundingClientRect();
       const o = { x: r.left + r.width / 2, y: r.top + 40, w: r.width * .8 };
@@ -1036,8 +1125,25 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
       for (let i = 0; i < 26; i++) spawnKernel(o, { min: 26, max: 50, vy: -rand(520, 900) * U });
       for (let i = 0; i < 8; i++) spawnStar(o);
       for (let i = 0; i < 30; i++) spawnSpark(o);
-    }, 900);
+      sweep(pass.querySelector(':scope > .sheen'));
+    }, 1500);
+    setTimeout(() => pass.classList.add('sway'), 2400);
   }
+
+  // ---------- ticket colour (remembered per ticket on this device) ----------
+  const TICKET_COLORS = { red: ['#D62839', '#8E1422'], gold: ['#E8A33D', '#8A5A12'], navy: ['#2F5AA8', '#14254D'] };
+  const ticketColorOf = e => { const c = store.get('ysc_tc_' + (e && e.ticketNo)); return TICKET_COLORS[c] ? c : 'red'; };
+  function applyTicketColor(c) {
+    const [a, b] = TICKET_COLORS[c] || TICKET_COLORS.red, pass = $('#pass');
+    pass.style.setProperty('--ta', a); pass.style.setProperty('--tb', b); pass.dataset.tc = c;
+    document.querySelectorAll('.tcolor').forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.tc === c)));
+  }
+  document.querySelectorAll('.tcolor').forEach(btn => btn.addEventListener('click', () => {
+    applyTicketColor(btn.dataset.tc);
+    if (myEntry) store.set('ysc_tc_' + myEntry.ticketNo, btn.dataset.tc);
+    sweep($('#pass > .sheen')); SFX.pop(.35);
+  }));
+  attachShine($('#pass'));
   $('#ticketBack').addEventListener('click', () => { openHall(currentHall); });
   $('#homeBtn').addEventListener('click', () => { openHall(currentHall); });
 
@@ -1062,7 +1168,8 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     g.fillStyle = '#0B0B0F'; g.fillRect(0, 0, W, H);
     g.save(); rr(g, 0, 0, W, H, 18 * S); g.clip();
     g.fillStyle = '#141418'; g.fillRect(0, 0, W, H);
-    const grad = g.createLinearGradient(0, 0, W, headH); grad.addColorStop(0, '#D62839'); grad.addColorStop(1, '#8E1422');
+    const [ca, cb] = TICKET_COLORS[ticketColorOf(e)];
+    const grad = g.createLinearGradient(0, 0, W, headH); grad.addColorStop(0, ca); grad.addColorStop(1, cb);
     g.fillStyle = grad; g.fillRect(0, 0, W, headH);
     const drawImg = (img, x, y, w, rot) => { if (!img) return; const hh = w * img.height / img.width; g.save(); g.translate(x + w / 2, y + hh / 2); g.rotate(rot); g.drawImage(img, -w / 2, -hh / 2, w, hh); g.restore(); };
     drawImg(stars[2] || stars[0], W - 82 * S, -8 * S, 92 * S, .21);
@@ -1085,9 +1192,16 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     g.strokeStyle = '#2C2C34'; g.lineWidth = S; g.stroke();
     g.fillStyle = '#9C95A2'; g.font = `400 ${11 * S}px ${FONT_DISPLAY}`; g.fillText('NOW SHOWING', bx + 14 * S, by + 24 * S);
     const title = win ? win.title : '상영작 발표 예정';
-    g.fillStyle = '#FFC940'; fitText(g, title, bw - 28 * S, 19 * S, 900, FONT_BODY); g.fillText(title, bx + 14 * S, by + 52 * S);
-    if (pick) { g.fillStyle = '#BDB6C2'; fitText(g, `내가 고른 영화 · ${pick.title}`, bw - 28 * S, 13 * S, 500, FONT_BODY); g.fillText(`내가 고른 영화 · ${pick.title}`, bx + 14 * S, by + 76 * S); }
+    g.fillStyle = '#FFC940'; fitText(g, title, bw - 128 * S, 19 * S, 900, FONT_BODY); g.fillText(title, bx + 14 * S, by + 52 * S);
+    if (pick) { g.fillStyle = '#BDB6C2'; fitText(g, `내가 고른 영화 · ${pick.title}`, bw - 128 * S, 13 * S, 500, FONT_BODY); g.fillText(`내가 고른 영화 · ${pick.title}`, bx + 14 * S, by + 76 * S); }
 
+    // VOTED stamp, same as on screen
+    g.save(); g.translate(W - pad - 62 * S, by + bh / 2 + 2 * S); g.rotate(-14 * Math.PI / 180); g.globalAlpha = .92;
+    g.strokeStyle = '#FF4D5E'; g.lineWidth = 3 * S; rr(g, -50 * S, -26 * S, 100 * S, 52 * S, 10 * S); g.stroke();
+    g.globalAlpha = .4; g.lineWidth = 1.5 * S; rr(g, -45 * S, -21 * S, 90 * S, 42 * S, 7 * S); g.stroke(); g.globalAlpha = .92;
+    g.fillStyle = '#FF4D5E'; g.textAlign = 'center'; g.font = `400 ${26 * S}px ${FONT_DISPLAY}`; g.fillText('VOTED', 0, 6 * S);
+    g.font = `800 ${9 * S}px ${FONT_BODY}`; g.fillText('투표 완료 ★ 2026', 0, 19 * S);
+    g.restore(); g.textAlign = 'left';
     // perforation + stub
     g.strokeStyle = '#3A3A44'; g.lineWidth = 2 * S; g.setLineDash([6 * S, 6 * S]);
     g.beginPath(); g.moveTo(18 * S, perfY); g.lineTo(W - 18 * S, perfY); g.stroke(); g.setLineDash([]);
@@ -1167,6 +1281,33 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     } catch { $('#lkErr').textContent = '연결이 불안정해요. 잠시 후 다시 시도해 주세요.'; }
   });
   addEventListener('keydown', e => { if (e.key === 'Escape') closeLookup(); });
+
+  // ---------- intro: a soft beam eases toward the finger / mouse ----------
+  (() => {
+    const beam = $('#beam'); if (!beam || reduce) return;
+    let tx = 50, ty = 58, x = 50, y = 58, running = false;
+    const tick = () => {
+      x += (tx - x) * .12; y += (ty - y) * .12;
+      beam.style.setProperty('--bx', x.toFixed(2) + '%'); beam.style.setProperty('--by', y.toFixed(2) + '%');
+      if (Math.abs(tx - x) > .1 || Math.abs(ty - y) > .1) requestAnimationFrame(tick); else running = false;
+    };
+    intro.addEventListener('pointermove', e => {
+      tx = e.clientX / innerWidth * 100; ty = e.clientY / innerHeight * 100;
+      if (!running) { running = true; requestAnimationFrame(tick); }
+    }, { passive: true });
+    intro.addEventListener('pointerleave', () => { tx = 50; ty = 58; if (!running) { running = true; requestAnimationFrame(tick); } });
+  })();
+
+  // ---------- film grain: one small noise tile, moved around by CSS ----------
+  (() => {
+    const el = $('#grain'); if (!el) return;
+    const c = document.createElement('canvas'); c.width = c.height = 180;
+    const g = c.getContext('2d'), img = g.createImageData(180, 180);
+    for (let i = 0; i < img.data.length; i += 4) { const v = Math.random() * 255 | 0; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+    g.putImageData(img, 0, 0);
+    el.style.backgroundImage = `url(${c.toDataURL('image/png')})`;
+    el.style.mixBlendMode = 'overlay';
+  })();
 
   // ---------- sound on/off (remembered on this device) ----------
   const soundBtns = [...document.querySelectorAll('[data-sound]')];

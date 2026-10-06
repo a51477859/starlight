@@ -2,10 +2,11 @@
  * Files: assets/sfx/*.mp3 (Freesound, CC0). Offsets below were picked from a waveform scan:
  *   popcorn.mp3  dense popping around 4.5s, 6.6s, 9.0s; single pops at the listed early onsets
  *   drumroll.mp3 silent until 2.4s, roll builds, cymbal crash lands ~4.4s
+ *   stamp.mp3    single rubber-stamp hit at 0.5s;  curtain.mp3  cloth swish 0.3–1.1s
  * Browsers only allow sound after a tap/drag, so the context unlocks on the first gesture.
  */
 window.SFX = (() => {
-  const FILES = { popcorn: 'popcorn', drum: 'drumroll', woosh: 'woosh', printer: 'printer', fanfare: 'fanfare', cheer: 'cheer', twinkle: 'twinkle' };
+  const FILES = { popcorn: 'popcorn', drum: 'drumroll', woosh: 'woosh', printer: 'printer', fanfare: 'fanfare', cheer: 'cheer', twinkle: 'twinkle', stamp: 'stamp', curtain: 'curtain' };
   const SINGLE_POPS = [0.25, 0.4, 0.9, 1.15, 1.45, 2.05, 2.55, 3.25, 3.95];
   let ctx = null, master = null, loading = null;
   const buffers = {};
@@ -72,5 +73,7 @@ window.SFX = (() => {
     // drum roll whose crash lands `lead` seconds after the call
     drumroll(lead = 2.0) { play('drum', { offset: 4.4 - lead, dur: lead + 2.4, gain: 1 }); },
     winner() { play('cheer', { gain: 0.9 }); play('fanfare', { offset: 0.3, dur: 3.2, gain: 0.8, delay: 0.15 }); },
+    stamp(delay = 0) { play('stamp', { offset: 0.42, dur: 0.8, gain: 0.9, delay }); },
+    curtain() { play('curtain', { offset: 0.2, dur: 1.5, gain: 0.8 }); },
   };
 })();
