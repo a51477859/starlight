@@ -5,6 +5,8 @@
  */
 window.YSC = (() => {
   const API_URL = 'https://script.google.com/macros/s/AKfycbz_4FnT2tAWBEL_vnVH9NFxFICVu31Pn-YDThfQZjnJJ1BUbE4fA_KjRSZh1EUvv6lk/exec';
+  const ASSET_V = '58e03162';   // build.ps1 replaces this with a fingerprint of assets/posters, so changed posters skip old caches
+  const posterUrl = id => `assets/posters/${id}.jpg?v=${ASSET_V}`;
 
   // ---------- festival content (edit here when anything changes) ----------
   const HALLS = {
@@ -187,5 +189,5 @@ window.YSC = (() => {
     },
   };
 
-  return { API_URL, HALLS, MOVIES, DEFAULT_SETTINGS, store, keyOf, movieById, maskName, flagged, isClosed, api, local: !API_URL };
+  return { API_URL, posterUrl, HALLS, MOVIES, DEFAULT_SETTINGS, store, keyOf, movieById, maskName, flagged, isClosed, api, local: !API_URL };
 })();

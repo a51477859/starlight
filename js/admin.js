@@ -97,7 +97,7 @@ window.YSCAdmin = (root = document) => {
       const c = counts(h), total = byHall(h).length || 1, lead = leader(h), win = s.winners[h];
       const bars = MOVIES[h].map(m => {
         const n = c[m.id], pct = Math.round(n / total * 100);
-        return `<div class="bar"><img src="assets/posters/${m.id}.jpg" alt=""><div><div class="t">${esc(m.title)}${m === lead && n ? '<span class="lead">1위</span>' : ''}</div><div class="track"><i style="width:${pct}%"></i></div></div><div class="n">${n}표<small>${byHall(h).length ? pct : 0}%</small></div></div>`;
+        return `<div class="bar"><img src="${YSC.posterUrl(m.id)}" alt=""><div><div class="t">${esc(m.title)}${m === lead && n ? '<span class="lead">1위</span>' : ''}</div><div class="track"><i style="width:${pct}%"></i></div></div><div class="n">${n}표<small>${byHall(h).length ? pct : 0}%</small></div></div>`;
       }).join('');
       return `<div class="card hallcard">
         <h3>${esc(HALLS[h].name)} <small>${HALLS[h].tag} · ${byHall(h).length}명</small></h3>

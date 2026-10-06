@@ -794,7 +794,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   // official Korean one-sheet (assets/posters/<id>.jpg, 교내 한정 사용); typographic poster stays underneath as fallback
   const posterHTML = (m, extra = '') => `<div class="poster has-img ${extra}" style="--c1:${m.c1};--c2:${m.c2};--r:${m.r}">
-      <img class="p-img" src="assets/posters/${m.id}.jpg" alt="${esc(m.title)} 포스터" loading="lazy" decoding="async" onerror="this.parentNode.classList.remove('has-img');this.remove()">
+      <img class="p-img" src="${YSC.posterUrl(m.id)}" alt="${esc(m.title)} 포스터" loading="lazy" decoding="async" onerror="this.parentNode.classList.remove('has-img');this.remove()">
       <div class="p-top">Yulpo Starlight Cinema</div>
       <img class="p-obj" src="assets/img/${m.obj}.png" alt="">
       <div class="p-title">${esc(m.title)}</div><div class="p-en">${esc(m.en)}</div></div>`;
