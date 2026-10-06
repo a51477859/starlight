@@ -128,7 +128,16 @@ button{font:inherit;color:inherit}
 .topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;background:linear-gradient(180deg,rgba(11,11,15,.92),rgba(11,11,15,0));transition:background .25s}
 .topbar.solid{background:rgba(11,11,15,.94);backdrop-filter:blur(8px)}
-.logo{all:unset;cursor:pointer;font-family:var(--display);font-size:20px;letter-spacing:.05em;line-height:1}
+.logo{all:unset;cursor:pointer;font-family:var(--display);font-size:20px;letter-spacing:.05em;line-height:1;white-space:nowrap;flex:0 1 auto;min-width:0}
+/* narrow phones: logo, sound button and hall chip must share one line */
+@media (max-width:400px){
+  #hall .topbar{gap:6px}
+  #hall .topbar .logo{font-size:17px;letter-spacing:.03em}
+  #hall .topbar .topright{gap:6px;flex:0 0 auto}
+  #hall .topbar .sound.inline{width:34px;height:34px;font-size:15px}
+  #hall .topbar .hallchip{font-size:12px;padding:6px 10px}
+}
+@media (max-width:370px){ #hall .topbar .hallchip .t{display:none} }
 .logo span{color:var(--red)}
 .logo:focus-visible{outline:2px solid var(--corn);outline-offset:4px}
 .hallchip{font-size:13px;font-weight:700;padding:7px 12px;border-radius:999px;background:rgba(214,40,57,.16);border:1px solid rgba(214,40,57,.45);white-space:nowrap}
@@ -800,7 +809,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     const h = HALLS[key], list = MOVIES[key];
     const announced = FESTIVAL.announced;
     const win = list.find(m => m.id === FESTIVAL.winners[key]) || list[0];
-    $('#hallChip').textContent = `${h.name.slice(0, 2)} ${h.tag} · ${h.time.split(' · ')[1]}`;
+    $('#hallChip').innerHTML = `${esc(h.name.slice(0, 2))} ${esc(h.tag)}<span class="t"> · ${esc(h.time.split(' · ')[1])}</span>`;
     // poster wall: 12 rows × 6; cell (row r, col c) shows movie (r + c) % 3, so every 3 rows repeat
     const wallItems = []; for (let i = 0; i < 72; i++) wallItems.push(posterHTML(list[(Math.floor(i / 6) + i % 6) % list.length]));
     $('#wall').innerHTML = wallItems.join('');
