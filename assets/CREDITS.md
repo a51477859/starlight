@@ -14,12 +14,25 @@
 
 | 파일 | 영화 | TMDB |
 |---|---|---|
-| posters/robot.jpg | 와일드 로봇 | https://www.themoviedb.org/movie/1184918 |
-| posters/onward.jpg | 온워드: 단 하루의 기적 | https://www.themoviedb.org/movie/508439 |
-| posters/croods.jpg | 크루즈 패밀리: 뉴 에이지 | https://www.themoviedb.org/movie/529203 |
-| posters/tf1.jpg | 트랜스포머 ONE | https://www.themoviedb.org/movie/698687 |
-| posters/freeguy.jpg | 프리 가이 | https://www.themoviedb.org/movie/550988 |
-| posters/jumanji.jpg | 쥬만지: 새로운 세계 | https://www.themoviedb.org/movie/353486 |
+| posters/paddington.jpg | 패딩턴: 페루에 가다! | https://www.themoviedb.org/movie/516729 |
+| posters/coco.jpg | 코코 | https://www.themoviedb.org/movie/354912 |
+| posters/walle.jpg | 월-E | https://www.themoviedb.org/movie/10681 |
+| posters/wonder.jpg | 원더 | https://www.themoviedb.org/movie/406997 |
+| posters/soul.jpg | 소울 | https://www.themoviedb.org/movie/508442 |
+| posters/king.jpg | 왕과 사는 남자 | https://www.themoviedb.org/movie/1321179 |
+
+(2026-09-29에 쓰던 이전 후보작 포스터 6장은 assets/_old/posters/에 보관 — 배포에는 포함되지 않음)
+
+## 효과음 (Freesound, CC0 — 출처 표기 의무 없음)
+| 파일 | 원본 | 쓰는 곳 |
+|---|---|---|
+| sfx/popcorn.mp3 | https://freesound.org/s/169089/ "corn popper with accents" | 슬라이드 중 톡톡, POP, 티켓 발권 |
+| sfx/drumroll.mp3 | https://freesound.org/s/201211/ "Drum Roll Please" | LED 추첨 두구두구 + 심벌 |
+| sfx/woosh.mp3 | https://freesound.org/s/683101/ "quick woosh" | 영사기 빛 전환 |
+| sfx/printer.mp3 | https://freesound.org/s/345057/ "epson receipt printer7" | 티켓 인쇄 |
+| sfx/fanfare.mp3 | https://freesound.org/s/456966/ "Success Fanfare Trumpets" | LED 당첨 |
+| sfx/cheer.mp3 | https://freesound.org/s/333404/ "Cheer 2" | LED 당첨 |
+| sfx/twinkle.mp3 | https://freesound.org/s/639429/ "Crystal Twinkle" | 로비 등장, 티켓 발권 |
 
 ## 받아 두었지만 지금은 안 씀
 | 파일 | 원본 | 작가 | 라이선스 |

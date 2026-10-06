@@ -165,7 +165,7 @@ window.YSCAdmin = (root = document) => {
         <td>${e.hall === 'kids' ? '1부' : '2부'}</td>
         <td class="num">${e.grade}-${e.cls}-${e.num}</td>
         <td>${esc(e.name)}</td>
-        <td>${esc(YSC.movieById(e.movie)?.title || e.movie)}</td>
+        <td>${esc(YSC.movieById(e.movie)?.title || e.movieTitle || e.movie)}</td>
         <td class="comment">${e.comment ? hi(e.comment, fl) : '<span class="hint">—</span>'}</td>
         <td>${pill}</td>
         <td><div class="entry-actions">${toggle}<button class="btn danger" data-act="del" data-key="${key}">삭제</button></div></td>
@@ -193,7 +193,7 @@ window.YSCAdmin = (root = document) => {
   }
   $('#csv').addEventListener('click', () => {
     const rows = [['티켓번호', '부', '학년', '반', '번호', '이름', '투표 영화', '한마디', '금칙어', '추첨', '제출 시각']];
-    filtered().forEach(e => rows.push([e.ticketNo, e.hall === 'kids' ? '1부' : '2부', e.grade, e.cls, e.num, e.name, YSC.movieById(e.movie)?.title || e.movie, e.comment || '', flagsOf(e).join(' '),
+    filtered().forEach(e => rows.push([e.ticketNo, e.hall === 'kids' ? '1부' : '2부', e.grade, e.cls, e.num, e.name, YSC.movieById(e.movie)?.title || e.movieTitle || e.movie, e.comment || '', flagsOf(e).join(' '),
       { in: '포함', out: '제외', flagged: '금칙어 제외', none: '한마디 없음' }[drawStatus(e)], new Date(e.ts).toLocaleString('ko-KR')]));
     // a cell starting with = + - @ would run as a formula in Excel; prefix an apostrophe
     const cell = v => { let s = String(v); if (/^[=+\-@]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
