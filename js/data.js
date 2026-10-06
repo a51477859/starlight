@@ -84,6 +84,42 @@ window.YSC = (() => {
     return s;
   };
   const isClosed = s => s.closed || s.announced || new Date() >= new Date(s.voteClose);
+  const SELF_EDIT_LIMIT = 2;   // same as Code.gs
+  const pub = e => { const o = { ...e }; delete o.editKey; return o; };   // the edit key never leaves the phone that voted
+  function makeEditKey() {
+    const abc = 'abcdefghijkmnpqrstuvwxyz23456789'; let k = '';
+    for (let i = 0; i < 16; i++) k += abc[(Math.random() * abc.length) | 0];
+    return k;
+  }
+  // local mirror of Code.gs applyEdit_: same checks, same log line, draw records follow the move
+  function localEdit(m, key, patch, by, requireComment) {
+    const e = m[key], next = { ...e };
+    ['grade', 'cls', 'num'].forEach(k => { if (k in patch) next[k] = Number(patch[k]); });
+    if ('name' in patch) next.name = String(patch.name || '').trim();
+    if ('comment' in patch) next.comment = String(patch.comment || '').trim();
+    if ('drawOk' in patch) next.drawOk = patch.drawOk;
+    if (!HALLS[next.hall].grades.includes(next.grade)) return { status: 'invalid', message: '학년을 다시 골라 주세요.' };
+    if (!(next.cls >= 1 && next.cls <= 20)) return { status: 'invalid', message: '반을 숫자로 적어 주세요.' };
+    if (!(next.num >= 1 && next.num <= 40)) return { status: 'invalid', message: '번호를 숫자로 적어 주세요.' };
+    if (!/^[가-힣a-zA-Z\s]{2,10}$/.test(next.name)) return { status: 'invalid', message: '이름을 2~10자로 적어 주세요.' };
+    if ([...(next.comment || '')].length > 50) return { status: 'invalid', message: '한마디는 50자까지 쓸 수 있어요.' };
+    if (requireComment && !next.comment) return { status: 'invalid', message: '한마디를 남겨 주세요.' };
+    const newKey = keyOf(next);
+    if (newKey !== key && m[newKey]) return { status: 'conflict', message: `${next.grade}학년 ${next.cls}반 ${next.num}번으로 이미 투표한 기록이 있어요.` };
+    const changes = [];
+    if (newKey !== key) changes.push(`${key}→${newKey}`);
+    if (next.name !== e.name) changes.push(`${e.name}→${next.name}`);
+    if ((next.comment || '') !== (e.comment || '')) changes.push('한마디');
+    if (changes.length) {
+      const d = new Date(), p = n => String(n).padStart(2, '0');
+      next.log = (e.log ? e.log + ' / ' : '') + `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())} ${by}: ${changes.join(', ')}`;
+    }
+    delete m[key]; m[newKey] = next; L.saveEntries(m);
+    if (newKey !== key || next.name !== e.name) {
+      const dr = L.draws(); dr.forEach(x => { if (x.key === key) Object.assign(x, { key: newKey, name: next.name, grade: next.grade, cls: next.cls, num: next.num }); }); L.saveDraws(dr);
+    }
+    return { status: 'ok', entry: pub(next) };
+  }
 
   // ---------- local implementation (mirrors what Apps Script will do) ----------
   const L = {
@@ -117,14 +153,34 @@ window.YSC = (() => {
       if (isClosed(settingsLocal())) return { status: 'closed' };
       const map = L.entries(), k = keyOf(e), prev = map[k];
       if (prev) return prev.name === e.name ? { status: 'exists', entry: prev } : { status: 'conflict' };
-      const entry = { ...e, ticketNo: makeTicketNo(e), ts: new Date().toISOString(), drawOk: true };
+      const entry = { ...e, ticketNo: makeTicketNo(e), ts: new Date().toISOString(), drawOk: true, editKey: makeEditKey() };
       map[k] = entry; L.saveEntries(map);
       return { status: 'ok', entry };
     },
     async find(q) {
       if (API_URL) return post({ action: 'find', ...q });
       const prev = L.entries()[keyOf(q)];
-      return prev && prev.name === q.name ? { status: 'ok', entry: prev } : { status: 'notfound' };
+      return prev && prev.name === q.name ? { status: 'ok', entry: pub(prev) } : { status: 'notfound' };
+    },
+    // a phone re-reads its own ticket by number (picks up a teacher's correction)
+    async ticket(ticketNo) {
+      if (API_URL) return post({ action: 'ticket', ticketNo });
+      const e = Object.values(L.entries()).find(x => x.ticketNo === ticketNo);
+      return e ? { status: 'ok', entry: pub(e) } : { status: 'notfound' };
+    },
+    // a student fixes their own entry from the phone that voted (needs the secret editKey that phone got)
+    async selfEdit(ticketNo, editKey, patch) {
+      if (API_URL) return post({ action: 'selfEdit', ticketNo, editKey, patch });
+      const s = settingsLocal(); if (isClosed(s)) return { status: 'closed' };
+      const m = L.entries(), key = Object.keys(m).find(k => m[k].ticketNo === ticketNo);
+      if (!key) return { status: 'notfound' };
+      if (!m[key].editKey || m[key].editKey !== editKey) return { status: 'denied' };
+      const used = ((m[key].log || '').match(/학생:/g) || []).length;
+      if (used >= SELF_EDIT_LIMIT) return { status: 'limit' };
+      const p = {}; ['grade', 'cls', 'num', 'name', 'comment'].forEach(k => { if (k in patch) p[k] = patch[k]; });
+      const r = localEdit(m, key, p, '학생', s.requireComment);
+      if (r.status === 'ok') r.left = SELF_EDIT_LIMIT - used - 1;
+      return r;
     },
 
     // ----- admin (every call carries the password) -----
@@ -134,7 +190,7 @@ window.YSC = (() => {
     },
     async list(pw) {
       if (API_URL) return post({ action: 'list', pw });
-      L.guard(pw); return { entries: Object.values(L.entries()), draws: L.draws(), settings: settingsLocal() };
+      L.guard(pw); return { entries: Object.values(L.entries()).map(pub), draws: L.draws(), settings: settingsLocal() };
     },
     async setSettings(pw, patch) {
       if (API_URL) return post({ action: 'setSettings', pw, patch });
@@ -145,7 +201,7 @@ window.YSC = (() => {
     async updateEntry(pw, key, patch) {
       if (API_URL) return post({ action: 'updateEntry', pw, key, patch });
       L.guard(pw); const m = L.entries(); if (!m[key]) return { status: 'notfound' };
-      m[key] = { ...m[key], ...patch }; L.saveEntries(m); return { status: 'ok', entry: m[key] };
+      return localEdit(m, key, patch, '선생님', false);
     },
     async deleteEntry(pw, key) {
       if (API_URL) return post({ action: 'deleteEntry', pw, key });

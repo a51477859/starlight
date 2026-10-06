@@ -164,11 +164,11 @@ window.YSCAdmin = (root = document) => {
         <td class="num">${esc(e.ticketNo)}${e.demo ? ' <span class="pill demo">예시</span>' : ''}</td>
         <td>${e.hall === 'kids' ? '1부' : '2부'}</td>
         <td class="num">${e.grade}-${e.cls}-${e.num}</td>
-        <td>${esc(e.name)}</td>
+        <td>${esc(e.name)}${e.log ? `<div class="elog" title="${esc(e.log)}">✎ ${esc(e.log.split(" / ").pop())}</div>` : ""}</td>
         <td>${esc(YSC.movieById(e.movie)?.title || e.movieTitle || e.movie)}</td>
         <td class="comment">${e.comment ? hi(e.comment, fl) : '<span class="hint">—</span>'}</td>
         <td>${pill}</td>
-        <td><div class="entry-actions">${toggle}<button class="btn danger" data-act="del" data-key="${key}">삭제</button></div></td>
+        <td><div class="entry-actions"><button class="btn" data-act="edit" data-key="${key}">수정</button>${toggle}<button class="btn danger" data-act="del" data-key="${key}">삭제</button></div></td>
       </tr>`;
     }).join('') || '<tr><td colspan="8" class="hint">조건에 맞는 응모가 없어요.</td></tr>';
   }
@@ -176,6 +176,7 @@ window.YSCAdmin = (root = document) => {
   $('#entryRows').addEventListener('click', async ev => {
     const b = ev.target.closest('button[data-act]'); if (!b) return;
     const key = b.dataset.key, e = DATA.entries.find(x => YSC.keyOf(x) === key); if (!e) return;
+    if (b.dataset.act === 'edit') return openEdit(e);
     if (b.dataset.act === 'toggle') {
       const st = drawStatus(e);
       const drawOk = st === 'in' ? false : (flagsOf(e).length ? 'force' : true);
@@ -186,6 +187,45 @@ window.YSCAdmin = (root = document) => {
       });
     }
   });
+  // ---------- correct an entry (wrong class / number / name, or tidy a comment) ----------
+  let editing = null;
+  function openEdit(e) {
+    editing = e;
+    const m = $('#editModal'), grades = HALLS[e.hall].grades;
+    $('#emInfo').textContent = `${e.ticketNo} · ${HALLS[e.hall].name} · ${YSC.movieById(e.movie)?.title || e.movieTitle || e.movie}`;
+    $('#emGrade').innerHTML = grades.map(g => `<option value="${g}" ${g === e.grade ? 'selected' : ''}>${g}학년</option>`).join('');
+    $('#emCls').value = e.cls; $('#emNum').value = e.num; $('#emName').value = e.name; $('#emComment').value = e.comment || '';
+    $('#emLog').textContent = e.log ? '고친 기록: ' + e.log : '';
+    $('#emErr').textContent = '';
+    m.hidden = false; $('#emCls').focus();
+  }
+  const closeEdit = () => { $('#editModal').hidden = true; editing = null; };
+  $('#editModal').addEventListener('click', ev => { if (ev.target.closest('[data-em="cancel"]') || ev.target.id === 'editModal') closeEdit(); });
+  $('#editForm').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const e = editing; if (!e) return;
+    const next = { grade: parseInt($('#emGrade').value, 10), cls: parseInt($('#emCls').value, 10), num: parseInt($('#emNum').value, 10),
+      name: $('#emName').value.trim(), comment: $('#emComment').value.trim() };
+    const patch = {}; Object.keys(next).forEach(k => { if (next[k] !== (k === 'comment' ? (e.comment || '') : e[k])) patch[k] = next[k]; });
+    if (!Object.keys(patch).length) return closeEdit();
+    const btn = $('#editForm button[type=submit]'); btn.disabled = true; btn.textContent = '저장 중…';
+    try {
+      const r = await api.updateEntry(PW, YSC.keyOf(e), patch);
+      if (r.status === 'ok') {
+        const oldKey = YSC.keyOf(e), nk = YSC.keyOf(r.entry);
+        if (offline) { // keep the no-network draw copy in step too
+          offline.entries = offline.entries.map(x => YSC.keyOf(x) === oldKey ? r.entry : x);
+          offline.draws.forEach(d => { if (d.key === oldKey) Object.assign(d, { key: nk, name: r.entry.name, grade: r.entry.grade, cls: r.entry.cls, num: r.entry.num }); });
+          saveOffline();
+        }
+        closeEdit(); await load(); toast('고쳤어요. 학생 폰의 티켓에도 반영돼요');
+      } else {
+        $('#emErr').textContent = r.message || (r.status === 'notfound' ? '이 응모를 찾지 못했어요. 새로고침 후 다시 해 주세요.' : '저장하지 못했어요.');
+      }
+    } catch { $('#emErr').textContent = '연결이 불안정해요. 잠시 후 다시 시도해 주세요.'; }
+    finally { btn.disabled = false; btn.textContent = '저장'; }
+  });
+
   function download(name, text, type) {
     const blob = new Blob([text], { type });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;

@@ -336,6 +336,19 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
 .lookup h2{margin:0;font-size:22px;font-weight:900}
 @media (min-width:900px){ .lookup .panel{display:grid;grid-template-columns:1fr;border-radius:20px} }
 
+/* ---------- "이 정보가 맞나요?" before the vote is sent ---------- */
+.confirm .panel{padding:24px 18px calc(env(safe-area-inset-bottom,0px) + 20px);display:grid;gap:14px;max-width:440px;text-align:center}
+.confirm h2{margin:0;font-size:22px;font-weight:900}
+.cf-who{padding:16px;border-radius:14px;background:#1A1A1F;border:1px solid #2C2C34;display:grid;gap:4px}
+.cf-who b{font-size:26px;font-weight:900;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.cf-who span{font-size:20px;font-weight:800;color:var(--corn)}
+.cf-movie{font-size:15px;color:#D6D0DA}
+.cf-movie b{color:#fff}
+.cf-note{margin:0;font-size:13px;color:var(--mute)}
+.cf-actions{display:grid;grid-template-columns:1fr 1.5fr;gap:8px}
+.cf-actions .btn-main,.cf-actions .btn-sub{min-height:54px;padding:0 10px;justify-content:center}
+@media (min-width:900px){ .confirm .panel{grid-template-columns:1fr;border-radius:20px} }
+
 /* ---------- winner reveal: curtains open on the chosen film (once per phone) ---------- */
 #reveal{position:fixed;inset:0;z-index:18;display:grid;place-items:center;overflow:hidden;background:radial-gradient(70% 55% at 50% 40%,#2a0d12,#07070A 75%)}
 #reveal[hidden]{display:none}
@@ -596,9 +609,24 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
       <button class="btn-sub" id="homeBtn">관 홈으로</button>
     </div>
     <p class="save-note">입장할 때 이 화면을 보여 주세요. 상영작이 발표되면 티켓에 영화 제목이 채워져요.</p>
+    <p class="save-note">반·번호·이름을 잘못 적었다면 <b>담임 선생님께</b> 알려 주세요. 고치면 이 티켓에도 바로 반영돼요.</p>
     <p class="save-note">📲 브라우저 메뉴에서 <b>홈 화면에 추가</b>를 누르면 앱처럼 바로 열 수 있어요.</p>
   </div>
 </section>
+
+<div class="sheet confirm" id="confirm" hidden role="dialog" aria-modal="true" aria-labelledby="cfTitle">
+  <div class="dim" data-cf="no"></div>
+  <div class="panel">
+    <h2 id="cfTitle">이 정보가 맞나요?</h2>
+    <div class="cf-who"><b id="cfWho"></b><span id="cfName"></span></div>
+    <div class="cf-movie" id="cfMovie"></div>
+    <p class="cf-note">반·번호가 틀리면 나중에 티켓을 찾기 어려워요. 한 번 더 확인해 주세요.</p>
+    <div class="cf-actions">
+      <button type="button" class="btn-sub" data-cf="no">다시 고칠게요</button>
+      <button type="button" class="btn-main" data-cf="yes" id="cfYes">맞아요, 투표할게요</button>
+    </div>
+  </div>
+</div>
 
 <div class="sheet lookup" id="lookup" hidden role="dialog" aria-modal="true" aria-labelledby="lkTitle">
   <div class="dim" data-close></div>
@@ -661,10 +689,10 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
 <div id="grain" aria-hidden="true"></div>
 <div id="flash" aria-hidden="true"></div>
 
-<script src="js/data.js?v=c39b7af5"></script>
-<script src="js/sfx.js?v=c39b7af5"></script>
-<script src="js/admin-view.js?v=c39b7af5"></script>
-<script src="js/admin.js?v=c39b7af5"></script>
+<script src="js/data.js?v=ddcedc4f"></script>
+<script src="js/sfx.js?v=ddcedc4f"></script>
+<script src="js/admin-view.js?v=ddcedc4f"></script>
+<script src="js/admin.js?v=ddcedc4f"></script>
 <script>
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1111,7 +1139,29 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
   const API = YSC.api;   // submit / find (local now, Apps Script in stage 7)
   let myEntry = null;
   try { myEntry = JSON.parse(store.get('ysc_my') || 'null'); } catch {}
-  const rememberMine = e => { myEntry = e; store.set('ysc_my', JSON.stringify(e)); };
+  // keep the secret edit key this phone got at vote time even when a refreshed copy (without it) comes back
+  const rememberMine = e => {
+    if (myEntry && myEntry.editKey && !e.editKey && myEntry.ticketNo === e.ticketNo) e = { ...e, editKey: myEntry.editKey };
+    myEntry = e; store.set('ysc_my', JSON.stringify(e));
+  };
+
+  // ---------- "이 정보가 맞나요?" ----------
+  function askConfirm(info) {
+    const el = $('#confirm');
+    $('#cfWho').textContent = `${info.grade}학년 ${info.cls}반 ${info.num}번`;
+    $('#cfName').textContent = info.name;
+    $('#cfMovie').innerHTML = `내가 고른 영화 · <b>${esc(info.movie)}</b>`;
+    el.hidden = false;
+    if (!reduce) el.querySelector('.panel').animate([{ transform: 'translateY(30px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    setTimeout(() => $('#cfYes').focus({ preventScroll: true }), 50);
+    return new Promise(res => {
+      const pick = ev => {
+        const v = ev.target.closest('[data-cf]')?.dataset.cf; if (!v) return;
+        el.removeEventListener('click', pick); el.hidden = true; res(v === 'yes');
+      };
+      el.addEventListener('click', pick);
+    });
+  }
 
   const toast = msg => { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2200); };
   const scenes = [intro, lobby, hall, $('#entry'), $('#ticket')];
@@ -1172,6 +1222,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     if (!(num >= 1 && num <= 40)) return fail('번호를 숫자로 적어 주세요.', $('#num'));
     if (!/^[가-힣a-zA-Z\s]{2,10}$/.test(name)) return fail('이름을 2~10자로 적어 주세요.', $('#name'));
     err.textContent = '';
+    if (!(await askConfirm({ grade: formGrade, cls, num, name, movie: formMovie.title }))) return;
     const btn = $('#submitBtn'); btn.disabled = true; btn.textContent = '티켓 발권 중…';
     try {
       const res = await API.submit({ hall: currentHall, grade: formGrade, cls, num, name, movie: formMovie.id, movieTitle: formMovie.title, comment: text });
@@ -1197,7 +1248,17 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     for (let i = 0; i < 34; i++) { h = (h * 1103515245 + 12345) >>> 0; const w = 1 + (h >>> 29) % 3; const gap = 1 + (h >>> 26) % 3; out += `<i style="width:${w}px;margin-right:${gap}px"></i>`; }
     return out;
   }
-  function openTicket(e, fresh) {
+  function openTicket(e, fresh, refreshed) {
+    // re-read this ticket from the server so a teacher's correction (class, number, name…) shows up on the phone
+    if (!fresh && !refreshed && e && e.ticketNo) {
+      API.ticket(e.ticketNo).then(r => {
+        if (!r || r.status !== 'ok') return;
+        const n = r.entry, changed = ['grade', 'cls', 'num', 'name', 'comment', 'movie'].some(k => n[k] !== e[k]);
+        if (!changed) return;
+        rememberMine(n);
+        if (!$('#ticket').hidden) { openTicket(myEntry, false, true); toast('선생님이 고친 정보로 티켓을 새로 고쳤어요'); }
+      }).catch(() => {});
+    }
     const h = HALLS[e.hall], list = MOVIES[e.hall];
     const pick = list.find(m => m.id === e.movie);
     const win = FESTIVAL.announced ? list.find(m => m.id === FESTIVAL.winners[e.hall]) : null;

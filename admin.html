@@ -106,6 +106,10 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 .entry-actions{display:flex;gap:6px;flex-wrap:wrap}
 .entry-actions .btn{min-height:34px;padding:0 10px;font-size:13px}
 .comment{max-width:34ch}
+.elog{margin-top:3px;font-size:11px;color:#FFB020;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:22ch}
+.modal{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:16px}
+.modal-card{width:min(100%,520px);display:grid;gap:12px;max-height:90vh;overflow:auto}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 
 /* draw tab */
 .drawgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
@@ -276,6 +280,28 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 </div>
 
 <!-- ============ LED ============ -->
+<!-- ============ EDIT ENTRY ============ -->
+<div class="modal" id="editModal" hidden role="dialog" aria-modal="true" aria-labelledby="emTitle">
+  <form class="card modal-card" id="editForm" novalidate>
+    <h3 id="emTitle" style="font-size:19px">응모 정보 고치기</h3>
+    <p class="hint" id="emInfo" style="margin:0"></p>
+    <div class="three">
+      <div class="field"><label for="emGrade">학년</label><select id="emGrade"></select></div>
+      <div class="field"><label for="emCls">반</label><input type="number" id="emCls" min="1" max="20" inputmode="numeric"></div>
+      <div class="field"><label for="emNum">번호</label><input type="number" id="emNum" min="1" max="40" inputmode="numeric"></div>
+    </div>
+    <div class="field"><label for="emName">이름</label><input type="text" id="emName" maxlength="10" autocomplete="off"></div>
+    <div class="field"><label for="emComment">한마디</label><textarea id="emComment" rows="2" maxlength="80"></textarea></div>
+    <p class="hint" style="margin:0">투표한 영화와 티켓 번호는 그대로예요. 이미 다른 학생이 쓰는 번호로는 바꿀 수 없어요.</p>
+    <p class="hint" id="emLog" style="margin:0;font-size:12px"></p>
+    <p class="err" id="emErr" role="alert"></p>
+    <div class="switches" style="justify-content:flex-end">
+      <button type="button" class="btn" data-em="cancel">취소</button>
+      <button type="submit" class="btn main">저장</button>
+    </div>
+  </form>
+</div>
+
 <div id="led" hidden>
   <div class="stage" id="stage" data-s="intermission">
     <div class="bg"></div>
@@ -325,8 +351,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
   </div>
 </div>
 
-<script src="js/data.js?v=c39b7af5"></script>
-<script src="js/sfx.js?v=c39b7af5"></script>
-<script src="js/admin.js?v=c39b7af5"></script>
+<script src="js/data.js?v=ddcedc4f"></script>
+<script src="js/sfx.js?v=ddcedc4f"></script>
+<script src="js/admin.js?v=ddcedc4f"></script>
 </body>
 </html>
