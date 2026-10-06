@@ -334,10 +334,14 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
 /* ---------- lookup sheet ---------- */
 .lookup .panel{padding:22px 18px calc(env(safe-area-inset-bottom,0px) + 22px);display:grid;gap:14px;max-width:480px}
 .lookup h2{margin:0;font-size:22px;font-weight:900}
+.fix-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:4px}
+.fix-row .btn-sub{min-height:44px;padding:0 18px;font-size:15px}
+.fix-row span{font-size:13px;color:var(--mute)}
 @media (min-width:900px){ .lookup .panel{display:grid;grid-template-columns:1fr;border-radius:20px} }
 
 /* ---------- "이 정보가 맞나요?" before the vote is sent ---------- */
 .confirm .panel{padding:24px 18px calc(env(safe-area-inset-bottom,0px) + 20px);display:grid;gap:14px;max-width:440px;text-align:center}
+.sheet.confirm{z-index:60}
 .confirm h2{margin:0;font-size:22px;font-weight:900}
 .cf-who{padding:16px;border-radius:14px;background:#1A1A1F;border:1px solid #2C2C34;display:grid;gap:4px}
 .cf-who b{font-size:26px;font-weight:900;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
@@ -609,7 +613,8 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
       <button class="btn-sub" id="homeBtn">관 홈으로</button>
     </div>
     <p class="save-note">입장할 때 이 화면을 보여 주세요. 상영작이 발표되면 티켓에 영화 제목이 채워져요.</p>
-    <p class="save-note">반·번호·이름을 잘못 적었다면 <b>담임 선생님께</b> 알려 주세요. 고치면 이 티켓에도 바로 반영돼요.</p>
+    <div class="fix-row" id="fixRow" hidden><button type="button" class="btn-sub" id="fixBtn">✎ 내 정보 고치기</button><span id="fixLeft"></span></div>
+    <p class="save-note" id="fixNote">반·번호·이름을 잘못 적었다면 <b>담임 선생님께</b> 알려 주세요. 고치면 이 티켓에도 바로 반영돼요.</p>
     <p class="save-note">📲 브라우저 메뉴에서 <b>홈 화면에 추가</b>를 누르면 앱처럼 바로 열 수 있어요.</p>
   </div>
 </section>
@@ -626,6 +631,26 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
       <button type="button" class="btn-main" data-cf="yes" id="cfYes">맞아요, 투표할게요</button>
     </div>
   </div>
+</div>
+
+<div class="sheet lookup" id="selfEdit" hidden role="dialog" aria-modal="true" aria-labelledby="seTitle">
+  <div class="dim" data-se-close></div>
+  <form class="panel" id="seForm" novalidate>
+    <h2 id="seTitle">내 정보 고치기</h2>
+    <p class="note" id="seNote" style="margin:0;color:var(--mute);font-size:14px"></p>
+    <div class="who">
+      <div class="field"><label for="seGrade">학년</label><select id="seGrade"></select></div>
+      <div class="field"><label for="seCls">반</label><input type="number" id="seCls" inputmode="numeric" min="1" max="20"></div>
+      <div class="field"><label for="seNum">번호</label><input type="number" id="seNum" inputmode="numeric" min="1" max="40"></div>
+    </div>
+    <div class="field"><label for="seName">이름</label><input type="text" id="seName" maxlength="10" autocomplete="off"></div>
+    <div class="field"><label for="seComment">나의 한마디</label><textarea id="seComment" maxlength="80" style="min-height:84px"></textarea></div>
+    <p class="err" id="seErr" role="alert"></p>
+    <div class="actions" style="position:static;transform:none;padding:0;background:none;width:100%">
+      <button type="button" class="btn-sub" data-se-close>닫기</button>
+      <button type="submit" class="btn-main" id="seSave">고친 내용 저장</button>
+    </div>
+  </form>
 </div>
 
 <div class="sheet lookup" id="lookup" hidden role="dialog" aria-modal="true" aria-labelledby="lkTitle">
@@ -1151,6 +1176,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     $('#cfWho').textContent = `${info.grade}학년 ${info.cls}반 ${info.num}번`;
     $('#cfName').textContent = info.name;
     $('#cfMovie').innerHTML = `내가 고른 영화 · <b>${esc(info.movie)}</b>`;
+    $('#cfYes').textContent = info.yes || '맞아요, 투표할게요';
     el.hidden = false;
     if (!reduce) el.querySelector('.panel').animate([{ transform: 'translateY(30px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
     setTimeout(() => $('#cfYes').focus({ preventScroll: true }), 50);
@@ -1274,6 +1300,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     $('#tNo').textContent = `TICKET NO. ${e.ticketNo}`;
     $('#tBar').innerHTML = barcode(e.ticketNo);
     applyTicketColor(ticketColorOf(e));
+    showFix(e);
     showScene($('#ticket'));
     const pass = $('#pass'), stamp = $('#stamp');
     pass.classList.remove('sway');
@@ -1437,6 +1464,60 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--red);box
     closeSheet(); showScene(lobby);
     try { history.replaceState(null, '', location.pathname); } catch {}
   });
+
+  // ---------- 내 정보 고치기: only on the phone that voted (it holds the secret edit key), before the deadline, twice at most ----------
+  const SELF_LIMIT = 2;
+  const selfLeft = e => SELF_LIMIT - ((e.log || '').match(/학생:/g) || []).length;
+  const canSelfEdit = e => !!(e && e.editKey && myEntry && myEntry.ticketNo === e.ticketNo && !voteClosed() && selfLeft(e) > 0);
+  function showFix(e) {
+    const ok = canSelfEdit(e);
+    $('#fixRow').hidden = !ok;
+    if (ok) $('#fixLeft').textContent = `마감 전까지 ${selfLeft(e)}번 고칠 수 있어요`;
+    $('#fixNote').innerHTML = ok ? '반·번호·이름을 잘못 적었다면 위 버튼으로 직접 고칠 수 있어요.'
+      : '반·번호·이름을 잘못 적었다면 <b>담임 선생님께</b> 알려 주세요. 고치면 이 티켓에도 바로 반영돼요.';
+  }
+  const seSheet = $('#selfEdit');
+  const closeSelf = () => { seSheet.hidden = true; };
+  seSheet.querySelectorAll('[data-se-close]').forEach(b => b.addEventListener('click', closeSelf));
+  $('#fixBtn').addEventListener('click', () => {
+    const e = myEntry; if (!canSelfEdit(e)) return showFix(e);
+    $('#seGrade').innerHTML = HALLS[e.hall].grades.map(g => `<option value="${g}" ${g === e.grade ? 'selected' : ''}>${g}학년</option>`).join('');
+    $('#seCls').value = e.cls; $('#seNum').value = e.num; $('#seName').value = e.name; $('#seComment').value = e.comment || '';
+    $('#seNote').textContent = `투표한 영화는 바꿀 수 없어요. 고친 기록은 선생님께 보여요. (남은 횟수 ${selfLeft(e)}번)`;
+    $('#seErr').textContent = ''; seSheet.hidden = false;
+    if (!reduce) seSheet.querySelector('.panel').animate([{ transform: 'translateY(30px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  });
+  $('#seForm').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const e = myEntry, err = $('#seErr');
+    const next = { grade: parseInt($('#seGrade').value, 10), cls: parseInt($('#seCls').value, 10), num: parseInt($('#seNum').value, 10),
+      name: $('#seName').value.trim(), comment: $('#seComment').value.trim() };
+    if (!next.cls || !next.num || !next.name) { err.textContent = '반·번호·이름을 모두 채워 주세요.'; return; }
+    if (FESTIVAL.requireComment && !next.comment) { err.textContent = '한마디를 적어 주세요.'; return; }
+    const patch = {}; Object.keys(next).forEach(k => { if (next[k] !== (k === 'comment' ? (e.comment || '') : e[k])) patch[k] = next[k]; });
+    if (!Object.keys(patch).length) { err.textContent = '바뀐 내용이 없어요.'; return; }
+    if (('grade' in patch || 'cls' in patch || 'num' in patch || 'name' in patch) &&
+        !(await askConfirm({ grade: next.grade, cls: next.cls, num: next.num, name: next.name, movie: MOVIES[e.hall].find(m => m.id === e.movie)?.title || '', yes: '맞아요, 이렇게 고칠게요' }))) return;
+    const btn = $('#seSave'); btn.disabled = true; btn.textContent = '저장 중…';
+    try {
+      const r = await API.selfEdit(e.ticketNo, e.editKey, patch);
+      if (r.status === 'ok') {
+        rememberMine(r.entry); closeSelf(); openTicket(myEntry, false, true);
+        toast(r.left > 0 ? `고쳤어요! (${r.left}번 더 고칠 수 있어요)` : '고쳤어요! 더 고칠 일이 생기면 담임 선생님께 알려 주세요');
+        return;
+      }
+      err.textContent = {
+        conflict: r.message || '그 번호로 이미 투표한 친구가 있어요. 담임 선생님께 알려 주세요.',
+        invalid: r.message || '입력한 내용을 다시 확인해 주세요.',
+        closed: '투표가 마감되어 직접 고칠 수 없어요. 담임 선생님께 알려 주세요.',
+        limit: '고칠 수 있는 횟수를 다 썼어요. 담임 선생님께 알려 주세요.',
+        denied: '이 폰에서는 고칠 수 없어요. 담임 선생님께 알려 주세요.',
+        notfound: '투표 기록을 찾지 못했어요. 담임 선생님께 알려 주세요.'
+      }[r.status] || '고치지 못했어요. 담임 선생님께 알려 주세요.';
+    } catch { err.textContent = '연결이 불안정해요. 잠시 후 다시 시도해 주세요.'; }
+    finally { btn.disabled = false; btn.textContent = '고친 내용 저장'; }
+  });
+  addEventListener('keydown', e => { if (e.key === 'Escape') closeSelf(); });
 
   // ---------- lookup ("내 티켓 다시 보기") ----------
   const lookup = $('#lookup');
