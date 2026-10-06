@@ -218,6 +218,7 @@ window.YSCAdmin = (root = document) => {
         <ol class="winners">${ds.length ? ds.map(d => `<li class="${d.absent ? 'absent' : ''}">${d.grade}학년 ${d.cls}반 ${esc(d.name)}${d.absent ? ' (불참)' : ''}</li>`).join('') : '<li class="hint" style="list-style:none">아직 뽑지 않았어요</li>'}</ol>
         <div class="switches" style="margin-top:14px">
           <button class="btn main" data-led="${h}">LED 화면 열기</button>
+          <button class="btn gold" data-wall="${h}">별빛 한마디 월 띄우기</button>
           <button class="btn danger" data-reset="${h}" ${ds.length ? '' : 'disabled'}>추첨 기록 초기화</button>
         </div>
       </div>`;
@@ -227,6 +228,7 @@ window.YSCAdmin = (root = document) => {
   $('#drawCards').addEventListener('click', ev => {
     const led = ev.target.closest('[data-led]'), rs = ev.target.closest('[data-reset]');
     if (led) openLed(led.dataset.led);
+    const wl = ev.target.closest('[data-wall]'); if (wl) { openLed(wl.dataset.wall); setState('wall'); }
     if (rs) armed(rs, '한 번 더 누르면 초기화', async () => {
       const h = rs.dataset.reset;
       if (offline) { offline.draws = offline.draws.filter(d => d.hall !== h); saveOffline(); }
@@ -281,7 +283,50 @@ window.YSCAdmin = (root = document) => {
   const led = $('#led'), stage = $('#stage');
   let ledHall = null, current = null, rolling = false, uiTimer = null;
   const nameOnLed = n => S().maskName ? YSC.maskName(n) : n;
-  function setState(s) { stage.dataset.s = s; }
+  function setState(s) { if (stage.dataset.s === 'wall' && s !== 'wall') stopWall(); stage.dataset.s = s; if (s === 'wall') startWall(); }
+
+  // ----- Starlight Wall: approved comments rise like lanterns over a night sky -----
+  let wallTimer = null, wallRaf = null, wallCards = [], wallQueue = [], wallLane = -1;
+  const wallPool = () => source().entries.filter(e => e.hall === ledHall && drawStatus(e) === 'in');
+  function stopWall() {
+    clearInterval(wallTimer); cancelAnimationFrame(wallRaf); wallTimer = wallRaf = null;
+    wallCards.forEach(c => c.el.remove()); wallCards = [];
+  }
+  function startWall() {
+    stopWall();
+    const sky = $('#wallSky'); sky.querySelectorAll('.wall-empty').forEach(n => n.remove());
+    $('#wHall').textContent = `${HALLS[ledHall].name} · ${HALLS[ledHall].tag}`;
+    const list = wallPool();
+    if (!list.length) { sky.insertAdjacentHTML('beforeend', '<p class="wall-empty">아직 띄울 한마디가 없어요</p>'); return; }
+    const LANES = 5;
+    const spawn = () => {
+      if (!wallQueue.length) wallQueue = list.slice().sort(() => Math.random() - .5);
+      const e = wallQueue.pop();
+      let lane; do { lane = Math.floor(Math.random() * LANES); } while (lane === wallLane && LANES > 1); wallLane = lane;
+      const el = document.createElement('div'); el.className = 'wcard';
+      el.innerHTML = `<q>${esc(e.comment)}</q><small>${e.grade}학년 ${e.cls}반 ${esc(nameOnLed(e.name))}</small>`;
+      sky.appendChild(el);
+      wallCards.push({ el, x: 2 + lane * 19.5 + Math.random() * 3, y: 104, vy: 5.5 + Math.random() * 2, ph: Math.random() * 6, born: performance.now() });
+    };
+    spawn(); wallTimer = setInterval(spawn, reduce ? 4200 : 2300);
+    let last = performance.now();
+    const loop = now => {
+      const dt = Math.min((now - last) / 1000, .1); last = now;
+      const W = sky.clientWidth, H = sky.clientHeight;
+      for (let i = wallCards.length - 1; i >= 0; i--) {
+        const c = wallCards[i], age = (now - c.born) / 1000;
+        c.y -= (reduce ? c.vy * .5 : c.vy) * dt;
+        const a = Math.max(0, Math.min(1, age / 1.2, (c.y - 20) / 14));   // fade out before reaching the title
+        c.el.style.opacity = a.toFixed(2);
+        const sway = reduce ? 0 : Math.sin(age * .6 + c.ph) * 1.1;
+        c.el.style.transform = `translate(${((c.x + sway) / 100 * W).toFixed(1)}px, ${(c.y / 100 * H).toFixed(1)}px)`;
+        if (c.y < 16) { c.el.remove(); wallCards.splice(i, 1); }
+      }
+      wallRaf = requestAnimationFrame(loop);
+    };
+    wallRaf = requestAnimationFrame(loop);
+  }
+  function toggleWall() { if (!rolling) setState(stage.dataset.s === 'wall' ? 'intermission' : 'wall'); }
   function info() {
     $('#ledInfo').textContent = `${HALLS[ledHall].name} · 당첨 ${winnersOf(ledHall).length}/${target(ledHall)} · 후보 ${pool(ledHall).length}명 · 스페이스바: 다음`;
   }
@@ -293,13 +338,14 @@ window.YSCAdmin = (root = document) => {
     led.hidden = false; info(); pokeUI(); sizeFx();
     led.requestFullscreen?.().catch(() => {});
   }
-  function closeLed() { led.hidden = true; if (document.fullscreenElement) document.exitFullscreen?.(); renderDraw(); }
+  function closeLed() { stopWall(); led.hidden = true; if (document.fullscreenElement) document.exitFullscreen?.(); renderDraw(); }
   function pokeUI() { led.classList.add('show-ui'); clearTimeout(uiTimer); uiTimer = setTimeout(() => led.classList.remove('show-ui'), 2600); }
   led.addEventListener('pointermove', pokeUI);
 
   async function next() {
     if (rolling) return;
     const s = stage.dataset.s;
+    if (s === 'wall') return setState('intermission');
     if (s === 'intermission') return roll();
     if (s === 'winner') { showReveal(); return; }
     if (s === 'reveal') { return winnersOf(ledHall).length >= target(ledHall) ? setState('end') : roll(); }
@@ -363,6 +409,7 @@ window.YSCAdmin = (root = document) => {
   paintLedSound();
   $('#lNext').addEventListener('click', next);
   $('#lAbsent').addEventListener('click', markAbsent);
+  $('#lWall').addEventListener('click', toggleWall);
   $('#lInter').addEventListener('click', () => { if (!rolling) setState('intermission'); });
   $('#lClose').addEventListener('click', closeLed);
   $('#lFull').addEventListener('click', () => document.fullscreenElement ? document.exitFullscreen() : led.requestFullscreen?.());
@@ -372,6 +419,7 @@ window.YSCAdmin = (root = document) => {
     if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter' || e.key === 'PageDown') { e.preventDefault(); next(); }
     if (e.key === 'Escape') closeLed();
     if (e.key.toLowerCase() === 'f') led.requestFullscreen?.();
+    if (e.key.toLowerCase() === 'w') toggleWall();
   });
 
   // popcorn + stars burst on the LED (same sprites as the intro)
