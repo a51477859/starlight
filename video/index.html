@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>제2회 율포 별빛 영화제 안내 영상</title>
+<meta name="robots" content="noindex">
+<meta property="og:title" content="제2회 율포 별빛 영화제 안내 영상">
+<meta property="og:description" content="투표하고 한마디 남기고 티켓 받는 방법을 30초에 보여 드려요.">
+<meta property="og:image" content="https://a51477859.github.io/starlight/video/poster.jpg">
+<meta property="og:type" content="video.other">
+<style>
+:root{--ink:#0B0B0F;--corn:#FFC940;--red:#D62839}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--ink);color:#F4EEE3;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:12px 12px max(12px,env(safe-area-inset-bottom))}
+.wrap{position:relative;height:calc(100dvh - 96px);max-height:900px;aspect-ratio:9/16;max-width:100%;background:#000;border-radius:16px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+video{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+.snd{position:absolute;right:10px;top:10px;border:0;border-radius:20px;padding:8px 14px;font-weight:700;font-size:14px;font-family:inherit;background:rgba(0,0,0,.65);color:#fff;display:none}
+.snd.on{display:block}
+a.go{display:block;text-align:center;text-decoration:none;font-weight:700;font-size:17px;background:var(--red);color:#fff;padding:13px 26px;border-radius:30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <video id="v" src="starlight.mp4" poster="poster.jpg" controls playsinline muted autoplay preload="auto"></video>
+  <button class="snd" id="snd" type="button">🔊 소리 켜기</button>
+</div>
+<a class="go" href="https://a51477859.github.io/starlight/">투표·응모하러 가기 →</a>
+<script>
+const v=document.getElementById('v'),b=document.getElementById('snd');
+v.play().catch(()=>{});
+function sync(){ b.classList.toggle('on', v.muted && !v.paused); }
+v.addEventListener('play',sync); v.addEventListener('pause',sync); v.addEventListener('volumechange',sync);
+b.addEventListener('click',()=>{ v.muted=false; v.volume=1; sync(); });
+</script>
+</body>
+</html>
