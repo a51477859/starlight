@@ -214,6 +214,30 @@ kbd{display:inline-block;min-width:1.8em;padding:1px 7px;margin-right:4px;border
 .lb-card .art img{width:92%;height:92%;object-fit:contain;mix-blend-mode:lighten;-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparent 100%);mask-image:radial-gradient(closest-side,#000 62%,transparent 100%);animation:floaty 5s ease-in-out infinite}
 @keyframes floaty{50%{transform:translateY(-1.2cqw) rotate(1.5deg)}}
 .lb-card .copy{padding:2cqw 3.4cqw 2cqw 0}
+.lb-card.is-map{grid-template-columns:1.45fr 1fr}
+.lb-card.is-map h3{font-size:3.9cqw}
+.lb-card h3 em.g{color:#5BE39A}
+.route span.safe{background:#1E8A52;border-color:#3DBE7A;color:#fff}
+/* 2층 강당 약도 (화장실 · 대피로) */
+.hmap{width:100%;height:auto;overflow:visible;animation:floaty 7s ease-in-out infinite}
+.hmap .hall{fill:#1C1418;stroke:#5A4450;stroke-width:2}
+.hmap .corr{fill:#2C2026;stroke:#5A4450;stroke-width:2}
+.hmap .scr{fill:#F4EEE3;opacity:.85}
+.hmap .seat rect{fill:#7A1F2C}
+.hmap .door{fill:var(--corn)}
+.hmap .bal{fill:#FF6B7A}
+.hmap .lbl{font:800 17px var(--body);fill:#CFC7D3}
+.hmap .lbl.sm{font-size:14px}.hmap .lbl.dim{fill:#8E8794}.hmap .lbl.gold{fill:var(--corn)}
+.hmap .route{fill:none;stroke:var(--corn);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:2 12;animation:march .8s linear infinite;filter:drop-shadow(0 0 4px rgba(255,201,64,.7))}
+.hmap.exit .route{stroke:#5BE39A;filter:drop-shadow(0 0 4px rgba(91,227,154,.7))}
+@keyframes march{to{stroke-dashoffset:-14}}
+.hmap .dest circle{fill:var(--corn);stroke:#fff;stroke-width:3}
+.hmap .dest text{font:900 15px var(--body);fill:var(--ink)}
+.hmap.exit .dest circle{fill:#1E8A52;stroke:#5BE39A}.hmap.exit .dest text{fill:#fff;font-size:14px}
+.hmap .here circle{fill:var(--red);stroke:#fff;stroke-width:3}
+.hmap .here .ping{fill:none;stroke:var(--red);stroke-width:3;animation:ping 1.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ping{from{transform:scale(1);opacity:1}to{transform:scale(2.8);opacity:0}}
+.hmap .here-t{fill:#fff;font-weight:900;font-size:19px}
 .lb-card .k{font-family:var(--display);font-size:1.6cqw;letter-spacing:.3em;color:var(--corn)}
 .lb-card h3{margin:.8cqw 0 0;font-size:4.4cqw;font-weight:900;line-height:1.18;letter-spacing:-.03em;color:#FFF7E6}
 .lb-card h3 em{font-style:normal;color:var(--corn)}
@@ -393,14 +417,14 @@ kbd{display:inline-block;min-width:1.8em;padding:1px 7px;margin-right:4px;border
     <section id="tab-cer" role="tabpanel" hidden>
       <div class="card">
         <h3 style="font-size:17px">개회식 식순 화면</h3>
-        <p class="hint" style="margin:6px 0 0">부를 골라 열면 강당 화면에 <b>식 전 안내</b>(포토존 · 화장실 · 앞자리 착석 · 추첨 예고)가 저절로 돌아갑니다. 식이 시작되면 <b>스페이스바 · → · 리모컨</b>으로 한 장씩 넘기세요.</p>
+        <p class="hint" style="margin:6px 0 0">부를 골라 열면 강당 화면에 <b>식 전 안내</b>(포토존 · 화장실 · 앞자리 착석 · 비상 대피로 · 추첨 예고)가 저절로 돌아갑니다. 식이 시작되면 <b>스페이스바 · → · 리모컨</b>으로 한 장씩 넘기세요.</p>
         <ol class="cer-order" id="cerOrder"></ol>
       </div>
       <div class="drawgrid">
-        <div class="card"><h3 style="font-size:17px">1부 별빛 키즈시네마 <span class="hint">· 16:30 · 교장 선생님 말씀 있음</span></h3>
+        <div class="card"><h3 style="font-size:17px">1부 별빛 키즈시네마 <span class="hint">· 16:30</span></h3>
           <p class="hint" style="margin:6px 0 12px">영화: 웨이브</p>
           <button class="btn main" data-cer="kids">1부 식순 화면 열기</button></div>
-        <div class="card"><h3 style="font-size:17px">2부 별빛 시네마 <span class="hint">· 19:30 · 교장 선생님 말씀 없음</span></h3>
+        <div class="card"><h3 style="font-size:17px">2부 별빛 시네마 <span class="hint">· 19:30</span></h3>
           <p class="hint" style="margin:6px 0 12px">영화: 왓챠</p>
           <button class="btn main" data-cer="star">2부 식순 화면 열기</button></div>
       </div>
@@ -607,9 +631,9 @@ kbd{display:inline-block;min-width:1.8em;padding:1px 7px;margin-right:4px;border
   </div>
 </div>
 
-<script src="js/data.js?v=4505b212"></script>
-<script src="js/sfx.js?v=4505b212"></script>
-<script src="js/ceremony.js?v=4505b212"></script>
-<script src="js/admin.js?v=4505b212"></script>
+<script src="js/data.js?v=d2e90db8"></script>
+<script src="js/sfx.js?v=d2e90db8"></script>
+<script src="js/ceremony.js?v=d2e90db8"></script>
+<script src="js/admin.js?v=d2e90db8"></script>
 </body>
 </html>

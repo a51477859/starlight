@@ -1,5 +1,5 @@
 /* YULPO STARLIGHT CINEMA — opening ceremony slides (개회식 식순), inside the admin console
- * Order: 식 전 안내(auto-rotating) → 환영 → 국민의례 → 교장 선생님 말씀(1부만) → 영화제 시작(countdown) → black.
+ * Order: 식 전 안내(auto-rotating) → 환영 → 국민의례 → 교장 선생님 말씀 → 영화제 시작(countdown) → black.
  * From the black screen: M opens the hall's movie in a new tab, D jumps straight to that hall's LED draw.
  * Art: assets/ceremony/*.jpg (Codex, matched to the key visual). Music: assets/audio/anthem.mp3 (국민의례).
  */
@@ -9,17 +9,45 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     kids: { svc: '웨이브', url: 'https://www.wavve.com/player/movie?movieid=MV_CF01_SY0000011825' },
     star: { svc: '왓챠', url: 'https://watcha.com/watch/m5ZlLw9?ms=basic' },
   };
+  // map: 'wc' | 'exit' draws the 2층 강당(=체육관) sketch instead of a picture (layout from the event floor plan:
+  // screen on the left wall, the only door on the balloon-arch side). Stair positions are not drawn — only "가까운 계단".
   const NOTICES = [
-    { k: 'PHOTO ZONE', img: 'photozone', short: '포토존 자유 촬영', title: '포토존에서<br><em>자유롭게</em> 찍어요',
-      body: '가족, 친구와 함께 오늘의 별빛 추억을 사진으로 남겨 보세요.' },
-    { k: 'RESTROOM', img: 'restroom', short: '화장실 위치 안내', title: '화장실은<br><em>2층 체육관 밖</em><br>좌측 복도',
-      route: '<span class="no">강당 화장실</span><i>✕</i><span>2층 체육관</span><i>→</i><span>밖으로 나와</span><i>→</i><span class="go">← 좌측 복도</span>' },
-    { k: 'SEATING', img: 'seats', short: '앞자리부터 착석', title: '<em>앞자리부터</em><br>앉아 주세요',
+    { k: 'PHOTO ZONE', img: 'photozone', short: '레드카펫 · 포토존', sec: 9, title: '레드카펫과<br><em>대형 포토존</em>',
+      body: '입구 레드카펫과 대형 포토존에서 가족, 친구와 함께 오늘의 별빛 추억을 남겨 보세요.' },
+    { k: 'RESTROOM', map: 'wc', short: '화장실 위치 안내', sec: 13, title: '화장실은<br>출입구 나가서<br><em>왼쪽 복도</em>',
+      route: '<span class="no">강당 화장실</span><i>✕</i><span>출입구로 나가기</span><i>→</i><span class="go">← 왼쪽 복도</span>' },
+    { k: 'SEATING', img: 'seats', short: '앞자리부터 착석', sec: 9, title: '<em>앞자리부터</em><br>앉아 주세요',
       body: '뒤에 오시는 분들을 위해 앞줄부터 빈자리 없이 채워 주세요.' },
-    { k: 'STAR EVENT', img: 'giftbox', short: '영화 중간 추첨 이벤트', title: '영화 중간에<br><em>추첨 이벤트</em>가 있어요',
+    { k: 'EMERGENCY', map: 'exit', short: '비상시 대피로', sec: 13, title: '비상시에는<br><em class="g">운동장</em>으로',
+      route: '<span>출입구로 나가기</span><i>→</i><span>가까운 계단으로 나눠서</span><i>→</i><span class="safe">운동장 집결</span>',
+      body: '뛰지 말고, 선생님 안내에 따라 질서 있게 이동해요.' },
+    { k: 'STAR EVENT', img: 'giftbox', short: '영화 중간 추첨 이벤트', sec: 9, title: '영화 중간에<br><em>추첨 이벤트</em>가 있어요',
       body: '별빛 한마디를 남긴 친구 중에서 뽑아요. 끝까지 자리를 지켜 주세요!' },
   ];
-  const NOTICE_SEC = 9;
+  // top-down sketch of the 2층 강당: corridor on top, door at top-centre, screen on the left wall
+  function hallMap(kind) {
+    const seats = [];
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 9; c++) seats.push(`<rect x="${132 + c * 21}" y="${150 + r * 21}" width="13" height="11" rx="3"/>`);
+    const wc = kind === 'wc';
+    const path = wc ? 'M226 214 V172 H200 V44 H58' : 'M226 214 V172 H200 V44';
+    return `<svg class="hmap ${kind}" viewBox="0 0 400 300" role="img" aria-label="${wc ? '화장실 가는 길 약도' : '비상 대피로 약도'}">
+      <rect class="hall" x="40" y="86" width="320" height="200" rx="10"/>
+      <rect class="corr" x="10" y="20" width="380" height="48" rx="10"/><text class="lbl" x="${wc ? 300 : 110}" y="${wc ? 50 : 83}" text-anchor="middle">2층 복도</text>
+      <rect class="scr" x="50" y="104" width="9" height="162" rx="3"/><text class="lbl sm" transform="translate(80 185) rotate(-90)" text-anchor="middle">스크린</text>
+      <g class="seat">${seats.join('')}</g>
+      <rect class="door" x="178" y="80" width="44" height="12" rx="3"/><text class="lbl gold" x="236" y="116">출입구</text>
+      <circle class="bal" cx="170" cy="80" r="6"/><circle class="bal" cx="230" cy="80" r="6"/>
+      <text class="lbl dim" x="200" y="280" text-anchor="middle">2층 강당 (체육관)</text>
+      <path class="route" d="${path}"/>
+      ${wc
+        ? `<g class="dest" transform="translate(40 44)"><circle r="22"/><text y="6" text-anchor="middle">WC</text></g><text class="lbl gold" x="40" y="10" text-anchor="middle">화장실</text>`
+        : `<path class="route" d="M200 44 H350"/><path class="route" d="M200 44 H50"/>
+           <g class="dest" transform="translate(32 44)"><circle r="22"/><text y="6" text-anchor="middle">계단</text></g>
+           <g class="dest" transform="translate(368 44)"><circle r="22"/><text y="6" text-anchor="middle">계단</text></g>`}
+      <g class="here" transform="translate(226 214)"><circle r="11"/><circle class="ping" r="11"/></g>
+      <text class="lbl here-t" x="244" y="240">지금 여기</text>
+    </svg>`;
+  }
 
   const cer = $('#cer'), stage = $('#cstage');
   let hall = 'kids', slides = [], idx = 0, uiTimer = null;
@@ -62,7 +90,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
   });
 
   // ---------- slides ----------
-  const order = () => ['lobby', 'welcome', 'anthem', ...(hall === 'kids' ? ['speech'] : []), 'start'];
+  const order = () => ['lobby', 'welcome', 'anthem', 'speech', 'start'];
   const sec = k => $(`#cer .cs[data-k="${k}"]`);
   const NAMES = { lobby: '식 전 안내', welcome: '환영 인사', anthem: '국민의례', speech: '교장 선생님 말씀', start: '별빛 영화제 시작' };
 
@@ -112,16 +140,17 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
   function paintNotice(n) {
     nIdx = (n + NOTICES.length) % NOTICES.length;
     const it = NOTICES[nIdx];
-    $('#lbCard').innerHTML = `<div class="art swap"><img src="assets/ceremony/${it.img}.jpg" alt=""></div>
+    $('#lbCard').classList.toggle('is-map', !!it.map);
+    $('#lbCard').innerHTML = `<div class="art swap">${it.map ? hallMap(it.map) : `<img src="assets/ceremony/${it.img}.jpg" alt="">`}</div>
       <div class="copy"><div class="k">${it.k}</div><h3>${it.title}</h3>${it.body ? `<p>${it.body}</p>` : ''}${it.route ? `<div class="route">${it.route}</div>` : ''}</div>`;
     $$('#lbList li').forEach((li, i) => { li.classList.remove('on'); if (i === nIdx) { void li.offsetWidth; li.classList.add('on'); } });
+    clearTimeout(lbTimer); lbTimer = setTimeout(() => paintNotice(nIdx + 1), it.sec * 1000);   // map slides stay up longer
   }
   function startLobby() {
     stopLobby(); paintNotice(0); tickClock();
-    lbTimer = setInterval(() => paintNotice(nIdx + 1), NOTICE_SEC * 1000);
     clockTimer = setInterval(tickClock, 1000);
   }
-  function stopLobby() { clearInterval(lbTimer); clearInterval(clockTimer); }
+  function stopLobby() { clearTimeout(lbTimer); clearInterval(clockTimer); }
   function tickClock() {
     const m = /(\d{1,2}):(\d{2})/.exec(HALLS[hall].time); if (!m) return;
     const t = new Date(); t.setHours(+m[1], +m[2], 0, 0);
@@ -133,7 +162,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
       $('#lbCount').textContent = (h ? h + ':' + String(mm).padStart(2, '0') : mm) + ':' + String(ss).padStart(2, '0');
     } else { $('#lbCountL').textContent = 'STARTING SOON'; $('#lbCount').textContent = '곧 시작'; }
   }
-  $('#lbList').innerHTML = NOTICES.map((n, i) => `<li style="--len:${NOTICE_SEC}s"><b>0${i + 1}</b>${n.short}</li>`).join('');
+  $('#lbList').innerHTML = NOTICES.map((n, i) => `<li style="--len:${n.sec}s"><b>0${i + 1}</b>${n.short}</li>`).join('');
   const tick = NOTICES.map(n => `<span>★ <i>${n.k}</i> ${n.short}</span>`).join('') + '<span>★ <i>ENJOY</i> 별빛 영화제에 오신 것을 환영합니다</span>';
   $('#ticker').innerHTML = tick + tick;   // doubled so the -50% loop is seamless
 
@@ -225,8 +254,8 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
   $('#cClose').addEventListener('click', () => { close(); if (document.fullscreenElement) document.exitFullscreen?.(); });
   $('#cFull').addEventListener('click', () => document.fullscreenElement ? document.exitFullscreen() : goFull());
   $$('[data-cer]').forEach(b => b.addEventListener('click', () => open(b.dataset.cer)));
-  $('#cerOrder').innerHTML = ['식 전 안내 (포토존 · 화장실 · 앞자리 착석 · 추첨 예고, 9초마다 저절로 넘어감)', '별빛 영화제에 오신 여러분을 환영합니다',
-    '국민의례: 국기에 대한 경례 (누르면 음악 시작 → 끝나면 "이하 의식 생략")', '교장 선생님 말씀 (1부만)', '별빛 영화제 시작 (5·4·3·2·1 카운트다운 → 검은 화면 → 영화 열기)']
+  $('#cerOrder').innerHTML = ['식 전 안내 (포토존 · 화장실 · 앞자리 착석 · 비상 대피로 · 추첨 예고, 저절로 넘어감 / ↑↓로 직접 넘기기)', '별빛 영화제에 오신 여러분을 환영합니다',
+    '국민의례: 국기에 대한 경례 (누르면 음악 시작 → 끝나면 "이하 의식 생략")', '교장 선생님 말씀', '별빛 영화제 시작 (5·4·3·2·1 카운트다운 → 검은 화면 → 영화 열기)']
     .map(t => `<li>${t}</li>`).join('');
 
   addEventListener('keydown', e => {
@@ -234,15 +263,14 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     if ([' ', 'ArrowRight', 'PageDown', 'Enter'].includes(key)) { e.preventDefault(); next(); }
     else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(key)) { e.preventDefault(); prev(); }
-    else if (key === 'ArrowDown' && slides[idx] === 'lobby') { paintNotice(nIdx + 1); startLobbyTimerOnly(); }
-    else if (key === 'ArrowUp' && slides[idx] === 'lobby') { paintNotice(nIdx - 1); startLobbyTimerOnly(); }
+    else if (key === 'ArrowDown' && slides[idx] === 'lobby') paintNotice(nIdx + 1);
+    else if (key === 'ArrowUp' && slides[idx] === 'lobby') paintNotice(nIdx - 1);
     else if (key === 'b' || key === '.') stage.classList.toggle('black');
     else if (key === 'm') openMovie();
     else if (key === 'd') { e.preventDefault(); goDraw(); }
     else if (key === 'f') goFull();
     else if (key === 'Escape') close();
   });
-  function startLobbyTimerOnly() { clearInterval(lbTimer); lbTimer = setInterval(() => paintNotice(nIdx + 1), NOTICE_SEC * 1000); }
 
   // ---------- night sky: twinkling stars + slow golden dust, behind every slide ----------
   const sky = $('#cersky'), g = sky.getContext('2d'); let SW = 0, SH = 0, stars = [], dust = [];
