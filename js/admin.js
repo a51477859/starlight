@@ -462,6 +462,9 @@ window.YSCAdmin = (root = document) => {
     if (e.key.toLowerCase() === 'w') toggleWall();
   });
 
+  // opening ceremony slides (js/ceremony.js); D on its last screen hands over to the LED draw above
+  window.YSCCeremony?.({ $, $$, HALLS, S, openLed, reduce });
+
   // popcorn + stars burst on the LED (same sprites as the intro)
   const fx = $('#ledfx'), fctx = fx.getContext('2d'); let FW = 0, FH = 0; const parts = [];
   const sprites = { k: [], s: [] };

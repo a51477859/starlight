@@ -160,6 +160,161 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 .ledinfo{position:fixed;left:16px;bottom:16px;z-index:101;font-size:13px;color:var(--mute);opacity:0;transition:opacity .3s}
 #led.show-ui .ledinfo{opacity:1}
 @media (prefers-reduced-motion:reduce){.scene{transition:none}}
+
+/* ---------------- ceremony stage (개회식 식순) ----------------
+   Same 16:9 box as the LED. One .cs per slide; .on = current. Children with --d rise in one after another. */
+.cer-order{margin:12px 0 0;padding-left:20px;display:grid;gap:4px;font-size:14px}
+.cer-order li::marker{font-family:var(--display);color:var(--corn)}
+.keys{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px;font-size:14px}
+kbd{display:inline-block;min-width:1.8em;padding:1px 7px;margin-right:4px;border-radius:6px;border:1px solid #44444F;border-bottom-width:3px;background:var(--ink-3);font:700 12px/1.6 var(--body);text-align:center;color:var(--cream)}
+#cer{position:fixed;inset:0;z-index:100;background:#000;display:grid;place-items:center;cursor:none}
+#cer.show-ui{cursor:default}
+.cstage{position:relative;width:min(100vw,177.78vh);aspect-ratio:16/9;overflow:hidden;container-type:inline-size;background:#07070A;color:#fff;isolation:isolate}
+.cstage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:5;background:radial-gradient(120% 90% at 50% 50%,transparent 55%,rgba(0,0,0,.7))}
+#cersky{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.cs{position:absolute;inset:0;z-index:1;opacity:0;visibility:hidden;transition:opacity .9s ease,visibility .9s}
+.cs.on{opacity:1;visibility:visible}
+.cs [style*="--d"]{opacity:0}
+.cs.on [style*="--d"]{animation:rise 1.1s cubic-bezier(.2,.8,.2,1) calc(var(--d) * 1s) both}
+@keyframes rise{from{opacity:0;transform:translateY(2.4cqw);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+.c-eye{font-family:var(--display);font-size:1.7cqw;letter-spacing:.42em;color:var(--corn);text-indent:.42em}
+.c-title{margin:0;font-family:var(--display);font-weight:400;text-transform:uppercase;line-height:.88;letter-spacing:.01em;font-size:10.5cqw;color:#FFF7E6;text-shadow:0 0 4cqw rgba(255,201,64,.35),0 .4cqw 0 rgba(0,0,0,.4)}
+.c-title .ch{display:inline-block;opacity:0}
+.cs.on .c-title .ch{animation:chIn 1s cubic-bezier(.2,.9,.25,1.2) calc(.35s + var(--i) * .055s) both}
+@keyframes chIn{0%{opacity:0;transform:translateY(60%) scale(.6) rotate(-8deg);filter:blur(8px);color:var(--corn)}60%{opacity:1;color:#FFE7A0}100%{opacity:1;transform:none;filter:none}}
+.c-title .ch.sp{width:.28em}
+.c-hall{display:inline-block;margin-top:2.4cqw;padding:.7cqw 2cqw;border:1px solid rgba(255,201,64,.55);border-radius:99px;font-size:1.7cqw;font-weight:800;letter-spacing:.06em;color:#FFE7A0;background:rgba(11,11,15,.5)}
+.c-grain{position:absolute;inset:-50%;z-index:6;pointer-events:none;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");animation:grain .5s steps(4) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
+.c-black{position:absolute;inset:0;z-index:9;background:#000;opacity:0;pointer-events:none;transition:opacity .6s}
+.cstage.black .c-black{opacity:1}
+/* spotlight beams sweeping from the ceiling */
+.beams{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen}
+.beams i{position:absolute;top:-10%;width:46cqw;height:120%;background:conic-gradient(from 168deg at 50% 0%,transparent 0deg,rgba(255,231,160,.22) 12deg,transparent 24deg);transform-origin:50% 0;filter:blur(1.2cqw)}
+.beams i:nth-child(1){left:-6cqw;animation:sweepL 9s ease-in-out infinite alternate}
+.beams i:nth-child(2){right:-6cqw;animation:sweepR 11s ease-in-out infinite alternate}
+@keyframes sweepL{from{transform:rotate(-26deg)}to{transform:rotate(14deg)}}
+@keyframes sweepR{from{transform:rotate(26deg)}to{transform:rotate(-12deg)}}
+
+/* 0. lobby — rotating notices in a marquee-bulb frame */
+.cs-lobby{display:grid;grid-template-rows:auto 1fr auto;padding:3.2cqw 4cqw 0;gap:2cqw;background:radial-gradient(80% 70% at 50% 120%,rgba(214,40,57,.32),transparent 70%)}
+.lb-top{display:flex;justify-content:space-between;align-items:center}
+.lb-brand{font-family:var(--display);font-size:2.3cqw;letter-spacing:.12em}
+.lb-brand b{font-weight:400;color:var(--red)}
+.lb-hall{font-size:1.6cqw;font-weight:800;color:#FFE7A0;letter-spacing:.04em}
+.lb-main{display:grid;grid-template-columns:1fr 27cqw;gap:3cqw;min-height:0}
+.lb-frame{position:relative;border-radius:2cqw;padding:1.1cqw;background:linear-gradient(160deg,#3A0B12,#16070A);box-shadow:0 0 5cqw rgba(214,40,57,.25)}
+.lb-frame::before,.lb-frame::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.1cqw;pointer-events:none;
+  background:radial-gradient(circle,#FFE7A0 0 26%,rgba(255,201,64,.5) 34%,transparent 46%) 0 0/2.2cqw 2.2cqw;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:bulb 1.2s steps(1) infinite}
+.lb-frame::after{background-position:1.1cqw 1.1cqw;animation-delay:-.6s}
+@keyframes bulb{0%{opacity:1}50%{opacity:.18}}
+.lb-card{position:relative;height:100%;border-radius:1.2cqw;background:radial-gradient(90% 90% at 75% 40%,#22161B,#0D0A0D);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;align-items:center}
+.lb-card .art{position:relative;height:100%;display:grid;place-items:center}
+.lb-card .art img{width:92%;height:92%;object-fit:contain;mix-blend-mode:lighten;-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparent 100%);mask-image:radial-gradient(closest-side,#000 62%,transparent 100%);animation:floaty 5s ease-in-out infinite}
+@keyframes floaty{50%{transform:translateY(-1.2cqw) rotate(1.5deg)}}
+.lb-card .copy{padding:2cqw 3.4cqw 2cqw 0}
+.lb-card .k{font-family:var(--display);font-size:1.6cqw;letter-spacing:.3em;color:var(--corn)}
+.lb-card h3{margin:.8cqw 0 0;font-size:4.4cqw;font-weight:900;line-height:1.18;letter-spacing:-.03em;color:#FFF7E6}
+.lb-card h3 em{font-style:normal;color:var(--corn)}
+.lb-card p{margin:1.4cqw 0 0;font-size:1.9cqw;font-weight:600;line-height:1.5;color:#E3DCE6}
+.lb-card .swap{animation:swapIn .9s cubic-bezier(.2,.8,.2,1) both}
+.lb-card .copy > *{animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
+.lb-card .copy > :nth-child(2){animation-delay:.12s}.lb-card .copy > :nth-child(3){animation-delay:.24s}.lb-card .copy > :nth-child(4){animation-delay:.36s}
+@keyframes swapIn{from{opacity:0;transform:scale(.85) rotate(-4deg)}to{opacity:1;transform:none}}
+.route{display:flex;flex-wrap:wrap;align-items:center;gap:.7cqw;margin-top:1.8cqw}
+.route span{padding:.55cqw 1.2cqw;border-radius:99px;background:#2A1C22;border:1px solid #4A3440;font-size:1.55cqw;font-weight:800;white-space:nowrap}
+.route span.no{text-decoration:line-through;text-decoration-thickness:.25cqw;text-decoration-color:var(--red);color:#9C95A2}
+.route span.go{background:var(--corn);border-color:var(--corn);color:var(--ink)}
+.route i{font-style:normal;color:var(--corn);font-weight:900;font-size:1.6cqw}
+.lb-side{display:grid;grid-template-rows:auto 1fr;gap:1.6cqw;min-height:0}
+.lb-count{padding:1.6cqw 2cqw;border-radius:1.4cqw;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);display:grid}
+.lb-count small{font-family:var(--display);font-size:1.15cqw;letter-spacing:.3em;color:var(--mute)}
+.lb-count b{font-family:var(--display);font-weight:400;font-size:6.4cqw;line-height:1;letter-spacing:.02em;color:var(--corn);font-variant-numeric:tabular-nums;text-shadow:0 0 2.4cqw rgba(255,201,64,.4)}
+.lb-count span{font-size:1.35cqw;font-weight:700;color:#D8D2DC}
+.lb-list{list-style:none;margin:0;padding:0;display:grid;gap:.8cqw;align-content:start}
+.lb-list li{position:relative;display:flex;align-items:center;gap:1cqw;padding:1cqw 1.4cqw;border-radius:1cqw;font-size:1.55cqw;font-weight:800;color:#8E8794;background:rgba(255,255,255,.03);overflow:hidden;transition:color .4s,background .4s}
+.lb-list li b{font-family:var(--display);font-weight:400;font-size:1.9cqw;color:#5A5560;transition:color .4s}
+.lb-list li.on{color:#fff;background:rgba(214,40,57,.22)}
+.lb-list li.on b{color:var(--corn)}
+.lb-list li::after{content:"";position:absolute;left:0;bottom:0;height:.25cqw;width:0;background:var(--corn)}
+.lb-list li.on::after{animation:prog var(--len,9s) linear both}
+@keyframes prog{to{width:100%}}
+.ticker{margin:0 -4cqw;padding:1cqw 0;background:var(--red);overflow:hidden;white-space:nowrap}
+.ticker-in{display:inline-block;font-size:1.6cqw;font-weight:800;letter-spacing:.02em;animation:tick 38s linear infinite}
+.ticker-in span{padding:0 2cqw}.ticker-in i{font-style:normal;color:var(--corn)}
+@keyframes tick{to{transform:translateX(-50%)}}
+
+/* 1. welcome — curtain opens */
+.cs-welcome{display:grid;place-items:center;text-align:center}
+.cw-bg{position:absolute;inset:0;background:url(assets/ceremony/curtain.jpg) center/cover;transform:scale(1.08);transition:transform 6s ease-out}
+.cs-welcome.on .cw-bg{transform:scale(1)}
+.cw-copy{position:relative;z-index:2;display:grid;justify-items:center}
+.cw-ko{margin:2.4cqw 0 0;font-size:3.6cqw;font-weight:900;letter-spacing:-.02em;text-shadow:0 .3cqw 2cqw rgba(0,0,0,.8)}
+.cw-ko em,.st-ko em{font-style:normal;color:var(--corn)}
+.drape{position:absolute;top:0;bottom:0;width:51%;z-index:3;background:repeating-linear-gradient(90deg,#5E0A14 0 2.2cqw,#A3172A 4.4cqw,#5E0A14 6.6cqw),#7A0F1C;box-shadow:inset 0 -6cqw 6cqw rgba(0,0,0,.5);transition:transform 2.2s cubic-bezier(.7,0,.2,1) .2s}
+.drape.l{left:0;transform-origin:left}.drape.r{right:0;transform-origin:right}
+.cs-welcome.on .drape.l{transform:translateX(-100%) scaleX(.4)}
+.cs-welcome.on .drape.r{transform:translateX(100%) scaleX(.4)}
+.cs-welcome.on .c-title .ch{animation-delay:calc(1.2s + var(--i) * .055s)}   /* wait for the curtain */
+.cs-welcome.on [style*="--d"]{animation-delay:calc(var(--d) * 1s + 1s)}
+
+/* 2. anthem — 태극기 */
+.cs-anthem{display:grid;grid-template-rows:auto 1fr auto auto;justify-items:center;padding:3cqw 0 2.4cqw;text-align:center;background:radial-gradient(60% 60% at 50% 45%,#1A1A24,#07070A 75%)}
+.ca-head h2{margin:.3cqw 0 0;font-size:3.4cqw;font-weight:900;letter-spacing:.1em}
+.flagwrap{position:relative;height:100%;max-height:30cqw;aspect-ratio:3/2;margin:1.6cqw 0;border-radius:.4cqw;overflow:hidden;box-shadow:0 2cqw 5cqw rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.12);animation:flagIn 1.4s cubic-bezier(.2,.8,.2,1) both paused}
+.cs-anthem.on .flagwrap{animation-play-state:running}
+@keyframes flagIn{from{opacity:0;transform:perspective(60cqw) rotateY(-24deg) scale(.86)}to{opacity:1;transform:none}}
+#flag{display:block;width:100%;height:100%}
+.flag-sheen{position:absolute;inset:0;pointer-events:none;background:linear-gradient(100deg,transparent 0%,rgba(0,0,0,.12) 18%,rgba(255,255,255,.16) 30%,transparent 42%,rgba(0,0,0,.1) 58%,rgba(255,255,255,.12) 72%,transparent 86%) 0 0/200% 100%;mix-blend-mode:multiply;animation:wave 6s linear infinite}
+@keyframes wave{to{background-position:-200% 0}}
+.ca-lines{position:relative;height:6cqw;width:100%}
+.ca-s{position:absolute;inset:0;margin:0;display:flex;align-items:center;justify-content:center;gap:1.4cqw;font-size:3.4cqw;font-weight:900;letter-spacing:-.01em;opacity:0;transform:translateY(1cqw);transition:opacity .7s,transform .7s}
+.ca-s small{display:block;font-size:1.9cqw;font-weight:700;color:#D8D2DC;margin-left:1cqw}
+.ca-s b{color:var(--corn)}
+.cs-anthem[data-step="0"] .s0,.cs-anthem[data-step="1"] .s1,.cs-anthem[data-step="2"] .s2{opacity:1;transform:none}
+.eq{display:inline-flex;gap:.35cqw;align-items:flex-end;height:2.6cqw}
+.eq i{width:.55cqw;background:var(--corn);border-radius:.3cqw;height:30%;animation:eq .9s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:-.3s}.eq i:nth-child(3){animation-delay:-.6s}.eq i:nth-child(4){animation-delay:-.15s}
+@keyframes eq{50%{height:100%}}
+.ca-bar{width:40cqw;height:.4cqw;border-radius:1cqw;background:rgba(255,255,255,.1);overflow:hidden;opacity:0;transition:opacity .5s}
+.cs-anthem[data-step="1"] .ca-bar{opacity:1}
+.ca-bar i{display:block;height:100%;width:0;background:var(--corn)}
+
+/* 3. principal's speech */
+.cs-speech{display:grid;align-items:start;justify-items:center;text-align:center;padding-top:6cqw}
+.sp-bg{position:absolute;inset:0;background:url(assets/ceremony/podium.jpg) center bottom/cover;opacity:.95;animation:lampOn 1.6s steps(1) both paused}
+.cs-speech.on .sp-bg{animation-play-state:running}
+@keyframes lampOn{0%{opacity:0}12%{opacity:.6}18%{opacity:.1}30%{opacity:.8}36%{opacity:.3}50%,100%{opacity:.95}}
+.sp-copy{position:relative;display:grid;justify-items:center}
+.sp-copy h2{margin:1cqw 0 0;font-size:7cqw;font-weight:900;letter-spacing:-.03em;text-shadow:0 0 4cqw rgba(255,201,64,.3),0 .4cqw 1.6cqw rgba(0,0,0,.8)}
+
+/* 4. start — title, then a film-leader countdown, then black */
+.cs-start{display:grid;place-items:center;text-align:center;background:radial-gradient(70% 70% at 50% 110%,rgba(214,40,57,.4),transparent 70%)}
+.st-copy{position:relative;display:grid;justify-items:center;transition:opacity .6s,transform .6s}
+.st-ko{margin:2cqw 0 0;font-size:3.6cqw;font-weight:900}
+.st-movie{margin-top:2.2cqw;font-size:1.9cqw;font-weight:800;color:#FFE7A0}
+.st-movie:empty{display:none}
+.cs-start:not([data-step="0"]) .st-copy{opacity:0;transform:scale(.9)}
+.leader{position:absolute;inset:0;display:grid;place-items:center;background:#C9C1B2;opacity:0;visibility:hidden;transition:opacity .3s}
+.cs-start[data-step="1"] .leader{opacity:1;visibility:visible;animation:flick .12s steps(2) infinite}
+@keyframes flick{50%{filter:brightness(.88)}}
+.leader::before,.leader::after{content:"";position:absolute;background:#2A2723}
+.leader::before{left:0;right:0;top:50%;height:.25cqw}.leader::after{top:0;bottom:0;left:50%;width:.25cqw}
+.ld-ring{position:relative;z-index:1;width:36cqw;aspect-ratio:1;border-radius:50%;border:.5cqw solid #2A2723;box-shadow:0 0 0 2.4cqw #C9C1B2,0 0 0 2.9cqw #2A2723;display:grid;place-items:center;overflow:hidden}
+.ld-sweep{position:absolute;inset:0;background:conic-gradient(rgba(42,39,35,.55) var(--sw,0deg),transparent 0)}
+.ld-ring b{position:relative;font-family:var(--display);font-weight:400;font-size:24cqw;line-height:1;color:#1A1814}
+.st-black{position:absolute;inset:0;background:#000;display:grid;place-items:end center;padding-bottom:3cqw;opacity:0;visibility:hidden;transition:opacity 1.2s}
+.cs-start[data-step="2"] .st-black{opacity:1;visibility:visible}
+.st-black p{margin:0;font-size:1.3cqw;color:#6B6670;opacity:0;transition:opacity .3s}
+#cer.show-ui .st-black p{opacity:1}
+
+.cerui{position:fixed;right:16px;bottom:16px;z-index:101;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;opacity:0;transition:opacity .3s;max-width:calc(100vw - 32px)}
+#cer.show-ui .cerui{opacity:1}
+.cerui .btn:not(.gold){background:rgba(30,30,37,.92)}
+.cerinfo{position:fixed;left:16px;bottom:16px;z-index:101;font-size:13px;color:var(--mute);opacity:0;transition:opacity .3s}
+#cer.show-ui .cerinfo{opacity:1}
+@media (prefers-reduced-motion:reduce){.cs,.cs *{animation-duration:.01s!important;transition-duration:.2s!important}}
 </style>
 </head>
 <body>
@@ -190,6 +345,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="status" aria-selected="true">투표 현황</button>
       <button class="tab" role="tab" data-tab="entries" aria-selected="false">응모 목록</button>
+      <button class="tab" role="tab" data-tab="cer" aria-selected="false">개회식 식순</button>
       <button class="tab" role="tab" data-tab="draw" aria-selected="false">스타 이벤트 추첨</button>
       <button class="tab" role="tab" data-tab="settings" aria-selected="false">설정</button>
     </nav>
@@ -230,6 +386,32 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
           <thead><tr><th>티켓</th><th>부</th><th>학년·반·번호</th><th>이름</th><th>영화</th><th>한마디</th><th>추첨</th><th></th></tr></thead>
           <tbody id="entryRows"></tbody>
         </table>
+      </div>
+    </section>
+
+    <!-- ceremony -->
+    <section id="tab-cer" role="tabpanel" hidden>
+      <div class="card">
+        <h3 style="font-size:17px">개회식 식순 화면</h3>
+        <p class="hint" style="margin:6px 0 0">부를 골라 열면 강당 화면에 <b>식 전 안내</b>(포토존 · 화장실 · 앞자리 착석 · 추첨 예고)가 저절로 돌아갑니다. 식이 시작되면 <b>스페이스바 · → · 리모컨</b>으로 한 장씩 넘기세요.</p>
+        <ol class="cer-order" id="cerOrder"></ol>
+      </div>
+      <div class="drawgrid">
+        <div class="card"><h3 style="font-size:17px">1부 별빛 키즈시네마 <span class="hint">· 16:30 · 교장 선생님 말씀 있음</span></h3>
+          <p class="hint" style="margin:6px 0 12px">영화: 웨이브</p>
+          <button class="btn main" data-cer="kids">1부 식순 화면 열기</button></div>
+        <div class="card"><h3 style="font-size:17px">2부 별빛 시네마 <span class="hint">· 19:30 · 교장 선생님 말씀 없음</span></h3>
+          <p class="hint" style="margin:6px 0 12px">영화: 왓챠</p>
+          <button class="btn main" data-cer="star">2부 식순 화면 열기</button></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:17px">단축키</h3>
+        <div class="keys">
+          <span><kbd>스페이스</kbd><kbd>→</kbd> 다음</span><span><kbd>←</kbd> 이전</span>
+          <span><kbd>B</kbd> 화면 잠깐 검게</span><span><kbd>M</kbd> 영화 열기</span>
+          <span><kbd>D</kbd> 추첨 화면으로</span><span><kbd>F</kbd> 전체화면</span><span><kbd>Esc</kbd> 닫기</span>
+        </div>
+        <p class="hint" style="margin:10px 0 0"><b>영화 중간 추첨</b>: 영화를 멈추고 → 이 탭(별빛영화제)으로 돌아와 → <kbd>D</kbd>를 누르면 그 부의 추첨 화면이 바로 열려요. 추첨이 끝나면 <kbd>Esc</kbd>로 닫고 영화 탭으로 돌아가 이어 트세요.</p>
       </div>
     </section>
 
@@ -351,8 +533,83 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
   </div>
 </div>
 
-<script src="js/data.js?v=ddcedc4f"></script>
-<script src="js/sfx.js?v=ddcedc4f"></script>
-<script src="js/admin.js?v=ddcedc4f"></script>
+<!-- ============ CEREMONY (개회식 식순) ============ -->
+<div id="cer" hidden>
+  <div class="cstage" id="cstage">
+    <canvas id="cersky" aria-hidden="true"></canvas>
+
+    <section class="cs cs-lobby" data-k="lobby">
+      <header class="lb-top"><span class="lb-brand">YULPO <b>STARLIGHT</b> CINEMA</span><span class="lb-hall" data-hallname></span></header>
+      <div class="lb-main">
+        <div class="lb-frame"><div class="lb-card" id="lbCard"></div></div>
+        <aside class="lb-side">
+          <div class="lb-count"><small id="lbCountL">SHOW STARTS IN</small><b id="lbCount">--:--</b><span id="lbTime"></span></div>
+          <ol class="lb-list" id="lbList"></ol>
+        </aside>
+      </div>
+      <div class="ticker" aria-hidden="true"><div class="ticker-in" id="ticker"></div></div>
+    </section>
+
+    <section class="cs cs-welcome" data-k="welcome">
+      <div class="cw-bg"></div>
+      <div class="beams" aria-hidden="true"><i></i><i></i></div>
+      <div class="cw-copy">
+        <div class="c-eye">WELCOME TO</div>
+        <h1 class="c-title" data-split>Starlight Cinema</h1>
+        <p class="cw-ko">별빛 영화제에 오신 여러분을 <em>환영합니다</em></p>
+        <div class="c-hall" data-hallname></div>
+      </div>
+      <div class="drape l"></div><div class="drape r"></div>
+    </section>
+
+    <section class="cs cs-anthem" data-k="anthem" data-step="0">
+      <div class="ca-head"><div class="c-eye">CEREMONY</div><h2>국민의례</h2></div>
+      <div class="flagwrap"><svg id="flag" viewBox="0 0 300 200" role="img" aria-label="태극기"></svg><div class="flag-sheen"></div></div>
+      <div class="ca-lines">
+        <p class="ca-s s0">모두 일어나 국기를 향해 주십시오</p>
+        <p class="ca-s s1"><span class="eq"><i></i><i></i><i></i><i></i></span>국기에 대한 경례</p>
+        <p class="ca-s s2">바로 · <b>이하 의식 생략</b><small>모두 자리에 앉아 주세요</small></p>
+      </div>
+      <div class="ca-bar"><i id="caBar"></i></div>
+    </section>
+
+    <section class="cs cs-speech" data-k="speech">
+      <div class="sp-bg"></div>
+      <div class="sp-copy">
+        <div class="c-eye">WELCOME SPEECH</div>
+        <h2>교장 선생님 말씀</h2>
+      </div>
+    </section>
+
+    <section class="cs cs-start" data-k="start" data-step="0">
+      <div class="beams" aria-hidden="true"><i></i><i></i></div>
+      <div class="st-copy">
+        <div class="c-eye">NOW SHOWING</div>
+        <h1 class="c-title" data-split>Let the show begin</h1>
+        <p class="st-ko">별빛 영화제를 <em>시작합니다</em></p>
+        <div class="st-movie" id="stMovie"></div>
+      </div>
+      <div class="leader" aria-hidden="true"><div class="ld-ring"><div class="ld-sweep"></div><b id="ldNum">5</b></div></div>
+      <div class="st-black"><p id="stHint"></p></div>
+    </section>
+
+    <div class="c-grain" aria-hidden="true"></div>
+    <div class="c-black" aria-hidden="true"></div>
+  </div>
+  <div class="cerinfo" id="cerInfo"></div>
+  <div class="cerui">
+    <button class="btn" id="cPrev">◀ 이전</button>
+    <button class="btn" id="cMovie">영화 열기</button>
+    <button class="btn" id="cDraw">추첨 화면</button>
+    <button class="btn" id="cFull">전체화면</button>
+    <button class="btn gold" id="cNext">다음 ▶</button>
+    <button class="btn" id="cClose">닫기</button>
+  </div>
+</div>
+
+<script src="js/data.js?v=4505b212"></script>
+<script src="js/sfx.js?v=4505b212"></script>
+<script src="js/ceremony.js?v=4505b212"></script>
+<script src="js/admin.js?v=4505b212"></script>
 </body>
 </html>
