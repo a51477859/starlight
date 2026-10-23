@@ -1,5 +1,5 @@
 /* YULPO STARLIGHT CINEMA — opening ceremony slides (개회식 식순), inside the admin console
- * Order: 식 전 안내(auto-rotating) → 환영 → 국민의례 → 교장 선생님 말씀 → 학부모회 회장 인사말 → 영화제 시작(countdown) → black.
+ * Order: 식 전 안내(auto-rotating) → 환영 → 국민의례 → 교장 선생님 말씀 → 학부모회 회장 인사말 → 스타라이트 이벤트(추첨) → 영화제 시작(countdown) → black.
  * From the black screen: M opens the hall's movie in a new tab, D jumps straight to that hall's LED draw.
  * Art: assets/ceremony/*.jpg (Codex, matched to the key visual). Music: assets/audio/anthem.mp3 (국민의례).
  */
@@ -21,7 +21,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     { k: 'EMERGENCY', map: 'exit', short: '비상시 대피로', sec: 13, title: '비상시에는<br><em class="g">운동장</em>으로',
       body: '출입구로 나가 선생님 안내에 따라 가까운 계단으로 나눠서 내려가요. 승강기는 타지 않아요.',
       route: '<span>뛰지 않기</span><span>밀지 않기</span><span class="safe">운동장 집결</span>' },
-    { k: 'STAR EVENT', img: 'giftbox', short: '영화 중간 추첨 이벤트', sec: 9, title: '영화 중간에<br><em>추첨 이벤트</em>가 있어요',
+    { k: 'STAR EVENT', img: 'giftbox', short: '영화 시작 전 추첨 이벤트', sec: 9, title: '영화 시작 전<br><em>추첨 이벤트</em>가 있어요',
       body: '별빛 한마디를 남긴 친구 중에서 뽑아요. 끝까지 자리를 지켜 주세요!' },
   ];
   // 2층 floor map, north up, from the teacher's hand sketch (2026-10-23): 강당 doors open north onto a lobby;
@@ -92,15 +92,15 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     h.innerHTML = [...h.textContent].map(c => c === ' ' ? '<span class="ch sp"> </span>' : `<span class="ch" style="--i:${i++}">${c}</span>`).join('');
   });
   // staggered entrance for the rest of each slide's copy
-  $$('#cer .cw-copy > :not(h1), #cer .sp-copy > *, #cer .st-copy > :not(h1), #cer .ca-head').forEach(el => {
+  $$('#cer .cw-copy > :not(h1), #cer .sp-copy > *, #cer .st-copy > :not(h1), #cer .ev-copy > :not(h1), #cer .ca-head').forEach(el => {
     const sib = [...el.parentElement.children].indexOf(el);
     el.style.setProperty('--d', (.2 + sib * .35).toFixed(2));
   });
 
   // ---------- slides ----------
-  const order = () => ['lobby', 'welcome', 'anthem', 'speech', 'pta', 'start'];
+  const order = () => ['lobby', 'welcome', 'anthem', 'speech', 'pta', 'event', 'start'];
   const sec = k => $(`#cer .cs[data-k="${k}"]`);
-  const NAMES = { lobby: '식 전 안내', welcome: '환영 인사', anthem: '국민의례', speech: '교장 선생님 말씀', pta: '학부모회 회장 인사말', start: '별빛 영화제 시작' };
+  const NAMES = { lobby: '식 전 안내', welcome: '환영 인사', anthem: '국민의례', speech: '교장 선생님 말씀', pta: '학부모회 회장 인사말', event: '스타라이트 이벤트', start: '별빛 영화제 시작' };
 
   function show(i) {
     i = Math.max(0, Math.min(slides.length - 1, i));
@@ -118,6 +118,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     if (k === 'welcome') { window.SFX?.curtain(); window.SFX?.twinkle(.4, 1.2); }
     if (k === 'speech' || k === 'pta') window.SFX?.twinkle(.3, .4);
     if (k === 'start') window.SFX?.woosh(.5);
+    if (k === 'event') { window.SFX?.woosh(.6); window.SFX?.twinkle(.5, .5); }
     stage.classList.remove('black');
     info();
   }
@@ -134,6 +135,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
       if (st === 1) return;
       return openMovie();
     }
+    if (k === 'event') return goDraw('start');
     if (idx < slides.length - 1) show(idx + 1);
   }
   function prev() {
@@ -227,12 +229,18 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
   }
 
   // ---------- drawing to the LED ----------
-  function goDraw() { const h = hall; close(); openLed(h); }
+  // the draw runs on the LED screen; when it closes we come back here (to `back`, or to the slide we left)
+  function goDraw(back) {
+    const h = hall, k = typeof back === 'string' ? back : slides[idx];
+    close();
+    openLed(h, () => { cer.hidden = false; sizeSky(); show(slides.indexOf(k)); pokeUI(); });
+  }
 
   // ---------- open / close / ui ----------
   function info(msg) {
     const k = slides[idx]; let tip = '';
     if (k === 'anthem') tip = ['다음: 음악 시작', '음악 재생 중', '다음: 다음 순서'][+sec('anthem').dataset.step];
+    if (k === 'event') tip = '다음: 추첨 화면 열기 → 끝나면 영화제 시작으로 돌아와요';
     if (k === 'start') tip = ['다음: 카운트다운', '카운트다운 중', `다음: 영화 열기(${MOVIE_LINK[hall].svc})`][+sec('start').dataset.step];
     $('#cerInfo').textContent = msg || `${HALLS[hall].name} · ${idx + 1}/${slides.length} ${NAMES[k]}${tip ? ' · ' + tip : ''} · B 검은 화면 · D 추첨`;
     if (msg) pokeUI();
@@ -242,6 +250,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     $$('#cer [data-hallname]').forEach(el => el.textContent = `${HALLS[h].name} · ${HALLS[h].time}`);
     const id = S().winners?.[h], m = id && YSC.movieById(id);
     $('#stMovie').textContent = m ? `오늘의 상영작 · ${m.title}` : '';
+    $('#evPrizes').innerHTML = YSC.PRIZES[h].map(p => `<span><b>${p.rank}등</b>${p.gift ? ' ' + p.gift : ''} · ${p.n}명</span>`).join('');
     $('#stHint').textContent = `M 또는 다음 ▶ : ${MOVIE_LINK[h].svc}에서 영화 열기  ·  D : 추첨 화면`;
     cer.hidden = false; sizeSky(); show(0); pokeUI();
     goFull();
@@ -265,7 +274,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
   $('#cFull').addEventListener('click', () => document.fullscreenElement ? document.exitFullscreen() : goFull());
   $$('[data-cer]').forEach(b => b.addEventListener('click', () => open(b.dataset.cer)));
   $('#cerOrder').innerHTML = ['식 전 안내 (포토존 · 화장실 · 앞자리 착석 · 비상 대피로 · 추첨 예고, 저절로 넘어감 / ↑↓로 직접 넘기기)', '별빛 영화제에 오신 여러분을 환영합니다',
-    '국민의례: 국기에 대한 경례 (누르면 음악 시작 → 끝나면 "이하 의식 생략")', '교장 선생님 말씀', '학부모회 회장 인사말', '별빛 영화제 시작 (5·4·3·2·1 카운트다운 → 검은 화면 → 영화 열기)']
+    '국민의례: 국기에 대한 경례 (누르면 음악 시작 → 끝나면 "이하 의식 생략")', '교장 선생님 말씀', '학부모회 회장 인사말', '스타라이트 이벤트 (누르면 추첨 화면 → 3등·2등·1등 → 끝나면 저절로 다음 순서로)', '별빛 영화제 시작 (5·4·3·2·1 카운트다운 → 검은 화면 → 영화 열기)']
     .map(t => `<li>${t}</li>`).join('');
 
   addEventListener('keydown', e => {

@@ -377,15 +377,20 @@ window.YSCAdmin = (root = document) => {
     const nx = tierAt(ledHall, winnersOf(ledHall).length);
     $('#ledInfo').textContent = `${HALLS[ledHall].name} · 당첨 ${winnersOf(ledHall).length}/${target(ledHall)}${nx ? ` · 다음: ${nx.rank}등 ${nx.no}/${nx.n}` : ''} · 후보 ${pool(ledHall).length}명 · 스페이스바: 다음`;
   }
-  function openLed(h) {
-    ledHall = h; current = null;
+  // onDone: called when this draw screen closes (the ceremony uses it to come back to its next slide)
+  let ledDone = null;
+  function openLed(h, onDone) {
+    ledHall = h; current = null; ledDone = onDone || null;
     $('#lHall').textContent = `${HALLS[h].name} · ${HALLS[h].tag}`;
     $('#eHall').textContent = HALLS[h].name;
     setState(winnersOf(h).length >= target(h) ? 'end' : 'intermission');
     led.hidden = false; info(); pokeUI(); sizeFx();
     led.requestFullscreen?.().catch(() => {});
   }
-  function closeLed() { stopWall(); led.hidden = true; if (document.fullscreenElement) document.exitFullscreen?.(); renderDraw(); }
+  function closeLed() {
+    stopWall(); led.hidden = true; if (document.fullscreenElement) document.exitFullscreen?.(); renderDraw();
+    const cb = ledDone; ledDone = null; cb?.();
+  }
   function pokeUI() { led.classList.add('show-ui'); clearTimeout(uiTimer); uiTimer = setTimeout(() => led.classList.remove('show-ui'), 2600); }
   led.addEventListener('pointermove', pokeUI);
 
@@ -396,7 +401,7 @@ window.YSCAdmin = (root = document) => {
     if (s === 'intermission' || s === 'reveal') return nextPick();
     if (s === 'tier') return roll();
     if (s === 'winner') { showReveal(); return; }
-    if (s === 'end') return;
+    if (s === 'end') { if (ledDone) closeLed(); return; }   // from the ceremony: Space on the last screen hands back
   }
   // before the first winner of each prize tier, announce the tier ("이제 2등!")
   function nextPick() {
@@ -479,6 +484,7 @@ window.YSCAdmin = (root = document) => {
   stage.addEventListener('click', next);
   addEventListener('keydown', e => {
     if (led.hidden) return;
+    e.stopImmediatePropagation();   // the ceremony listens too; one key press must not move both screens
     if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter' || e.key === 'PageDown') { e.preventDefault(); next(); }
     if (e.key === 'Escape') closeLed();
     if (e.key.toLowerCase() === 'f') led.requestFullscreen?.();
