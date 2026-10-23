@@ -15,7 +15,8 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     { k: 'PHOTO ZONE', img: 'photozone', short: '레드카펫 · 포토존', sec: 9, title: '레드카펫과<br><em>대형 포토존</em>',
       body: '입구 레드카펫과 대형 포토존에서 가족, 친구와 함께 오늘의 별빛 추억을 남겨 보세요.' },
     { k: 'RESTROOM', map: 'wc', short: '화장실 위치 안내', sec: 13, title: '화장실은<br>출입구 나가서<br><em>왼쪽 복도</em>',
-      route: '<span class="no">강당 화장실</span><i>✕</i><span>출입구로 나가기</span><i>→</i><span class="go">← 왼쪽 복도</span>' },
+      body: '왼쪽 벽에 남자 화장실, 바로 뒤에 여자 화장실이 있어요.',
+      route: '<span class="no">강당 안 화장실</span><i>✕</i>' },
     { k: 'SEATING', img: 'seats', short: '앞자리부터 착석', sec: 9, title: '<em>앞자리부터</em><br>앉아 주세요',
       body: '뒤에 오시는 분들을 위해 앞줄부터 빈자리 없이 채워 주세요.' },
     { k: 'EMERGENCY', map: 'exit', short: '비상시 대피로', sec: 13, title: '비상시에는<br><em class="g">운동장</em>으로',
@@ -24,27 +25,12 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     { k: 'STAR EVENT', img: 'giftbox', short: '영화 중간 추첨 이벤트', sec: 9, title: '영화 중간에<br><em>추첨 이벤트</em>가 있어요',
       body: '별빛 한마디를 남긴 친구 중에서 뽑아요. 끝까지 자리를 지켜 주세요!' },
   ];
-  // top-down sketch of the 2층 강당 for the restroom: corridor on top, door at top-centre, screen on the left wall
-  function hallMap() {
-    const seats = [];
-    for (let r = 0; r < 5; r++) for (let c = 0; c < 9; c++) seats.push(`<rect x="${132 + c * 21}" y="${150 + r * 21}" width="13" height="11" rx="3"/>`);
-    return `<svg class="hmap wc" viewBox="0 0 400 300" role="img" aria-label="화장실 가는 길 약도">
-      <rect class="hall" x="40" y="86" width="320" height="200" rx="10"/>
-      <rect class="corr" x="10" y="20" width="380" height="48" rx="10"/><text class="lbl" x="300" y="50" text-anchor="middle">2층 복도</text>
-      <rect class="scr" x="50" y="104" width="9" height="162" rx="3"/><text class="lbl sm" transform="translate(80 185) rotate(-90)" text-anchor="middle">스크린</text>
-      <g class="seat">${seats.join('')}</g>
-      <rect class="door" x="178" y="80" width="44" height="12" rx="3"/><text class="lbl gold" x="236" y="116">출입구</text>
-      <circle class="bal" cx="170" cy="80" r="6"/><circle class="bal" cx="230" cy="80" r="6"/>
-      <text class="lbl dim" x="200" y="280" text-anchor="middle">2층 강당 (체육관)</text>
-      <path class="route" d="M226 214 V172 H200 V44 H58"/>
-      <g class="dest" transform="translate(40 44)"><circle r="22"/><text y="6" text-anchor="middle">WC</text></g><text class="lbl gold" x="40" y="10" text-anchor="middle">화장실</text>
-      <g class="here" transform="translate(226 214)"><circle r="11"/><circle class="ping" r="11"/></g>
-      <text class="lbl here-t" x="244" y="240">지금 여기</text>
-    </svg>`;
-  }
+  // restroom: Codex illustration drawn from the teacher's 2층 walk-through video (8.6s) — 남자 화장실 first, 여자 화장실 right behind it, on the left wall
+  const wcPhoto = () => `<figure class="wcph"><img src="assets/ceremony/wc-art.jpg" alt="왼쪽 복도의 화장실 입구 그림">
+      <span class="pin m" style="left:32%;top:18%">남자 화장실</span><span class="pin w" style="left:48%;top:26%">여자 화장실</span></figure>`;
   // evacuation: a route-line diagram (not to scale) from the teacher's walk-through video of the 2층 —
-  // 강당 앞 로비 → 로비 옆 계단 → 복도 계단 → 도서관 지나 끝 계단; every stair goes down to 운동장. Photos are frames of that video.
-  const STAIRS = [{ x: 120, img: 'stair-1', name: '강당 옆 계단' }, { x: 240, img: 'stair-2', name: '복도 계단' }, { x: 365, img: 'stair-3', name: '도서관 쪽 끝 계단' }];
+  // 강당 앞 로비 → 로비 옆 계단 → 복도 계단 → 도서관 지나 끝 계단; every stair goes down to 운동장. The stair picture is a Codex illustration (no real photos on screen).
+  const STAIRS = [{ x: 120 }, { x: 240 }, { x: 365 }];
   function evacMap() {
     return `<div class="evac"><svg class="hmap exit" viewBox="0 0 400 150" role="img" aria-label="비상 대피로: 출입구에서 가까운 계단으로, 운동장 집결">
       <rect class="field" x="6" y="112" width="388" height="34" rx="10"/><text class="lbl fld" x="200" y="135" text-anchor="middle">1층으로 내려가 → 운동장 집결</text>
@@ -54,7 +40,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
       <text class="lbl here-t" x="34" y="18" text-anchor="middle">강당 출입구</text>
       <g class="nolift" transform="translate(300 46)"><rect x="-26" y="-14" width="52" height="28" rx="6"/><text y="5" text-anchor="middle">승강기✕</text></g>
     </svg>
-    <div class="evac-ph">${STAIRS.map(s => `<figure><img src="assets/ceremony/${s.img}.jpg" alt="${s.name}"><figcaption>${s.name}</figcaption></figure>`).join('')}</div></div>`;
+    <figure class="evac-ph"><img src="assets/ceremony/stair-art.jpg" alt="비상구 표지가 있는 계단 그림"><figcaption>가까운 계단으로 나눠서 내려가요</figcaption></figure></div>`;
   }
 
   const cer = $('#cer'), stage = $('#cstage');
@@ -149,7 +135,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     nIdx = (n + NOTICES.length) % NOTICES.length;
     const it = NOTICES[nIdx];
     $('#lbCard').classList.toggle('is-map', !!it.map);
-    $('#lbCard').innerHTML = `<div class="art swap">${it.map === 'wc' ? hallMap() : it.map === 'exit' ? evacMap() : `<img src="assets/ceremony/${it.img}.jpg" alt="">`}</div>
+    $('#lbCard').innerHTML = `<div class="art swap">${it.map === 'wc' ? wcPhoto() : it.map === 'exit' ? evacMap() : `<img src="assets/ceremony/${it.img}.jpg" alt="">`}</div>
       <div class="copy"><div class="k">${it.k}</div><h3>${it.title}</h3>${it.body ? `<p>${it.body}</p>` : ''}${it.route ? `<div class="route">${it.route}</div>` : ''}</div>`;
     $$('#lbList li').forEach((li, i) => { li.classList.remove('on'); if (i === nIdx) { void li.offsetWidth; li.classList.add('on'); } });
     clearTimeout(lbTimer); lbTimer = setTimeout(() => paintNotice(nIdx + 1), it.sec * 1000);   // map slides stay up longer

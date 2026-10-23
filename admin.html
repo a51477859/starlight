@@ -234,15 +234,23 @@ kbd{display:inline-block;min-width:1.8em;padding:1px 7px;margin-right:4px;border
 .hmap .dest circle{fill:var(--corn);stroke:#fff;stroke-width:3}
 .hmap .dest text{font:900 15px var(--body);fill:var(--ink)}
 .hmap.exit .dest circle{fill:#1E8A52;stroke:#5BE39A}.hmap.exit .dest text{fill:#fff;font-size:14px}
+.wcph{position:relative;margin:0 0 0 2cqw;width:calc(100% - 2cqw);border-radius:1cqw;overflow:hidden;border:2px solid var(--corn)}
+.lb-card .art .wcph img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;mix-blend-mode:normal;-webkit-mask-image:none;mask-image:none;animation:none;filter:none}
+.wcph .pin{position:absolute;padding:.45cqw 1cqw;border-radius:.6cqw;font-size:1.35cqw;font-weight:900;color:#fff;white-space:nowrap;box-shadow:0 .4cqw 1.4cqw rgba(0,0,0,.5);animation:pinBob 1.6s ease-in-out infinite}
+.wcph .pin::before{content:"";position:absolute;top:-.7cqw;border:.45cqw solid transparent;border-top:0;border-bottom:.7cqw solid var(--pc)}
+.wcph .pin.m{--pc:#2F5AA8;--tx:-85%;background:var(--pc)}.wcph .pin.m::before{right:12%}
+.wcph .pin.w{--pc:#D62839;--tx:-15%;background:var(--pc);animation-delay:-.8s}.wcph .pin.w::before{left:12%}
+.wcph .pin{transform:translate(var(--tx),1.4cqw)}
+@keyframes pinBob{50%{transform:translate(var(--tx),2cqw)}}
+.route span.m{background:#2F5AA8;border-color:#2F5AA8;color:#fff}.route span.w{background:#D62839;border-color:#D62839;color:#fff}
 .evac{width:100%;display:grid;gap:1.2cqw;padding:0 0 0 2cqw}
 .hmap.exit{animation:none}
 .hmap .field{fill:#123522;stroke:#3DBE7A;stroke-width:2}
 .hmap .lbl.fld{fill:#BFF5D6;font-size:16px}
 .hmap .route.down{stroke-width:5}
 .hmap .nolift rect{fill:#3A1A1F;stroke:#FF5A6A;stroke-width:2}.hmap .nolift text{font:900 12px var(--body);fill:#FF9AA5}
-.evac-ph{display:grid;grid-template-columns:repeat(3,1fr);gap:1cqw}
-.evac-ph figure{margin:0;border-radius:.8cqw;overflow:hidden;border:2px solid #3DBE7A;background:#000}
-.lb-card .art .evac-ph img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;mix-blend-mode:normal;-webkit-mask-image:none;mask-image:none;animation:none;filter:none}
+.evac-ph{margin:0;border-radius:.8cqw;overflow:hidden;border:2px solid #3DBE7A;background:#000}
+.lb-card .art .evac-ph img{display:block;width:100%;height:auto;aspect-ratio:2.4/1;object-fit:cover;mix-blend-mode:normal;-webkit-mask-image:none;mask-image:none;animation:none;filter:none}
 .evac-ph figcaption{padding:.4cqw .6cqw;font-size:1.25cqw;font-weight:800;text-align:center;color:#fff;background:#1E8A52}
 .hmap .here circle{fill:var(--red);stroke:#fff;stroke-width:3}
 .hmap .here .ping{fill:none;stroke:var(--red);stroke-width:3;animation:ping 1.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
@@ -641,9 +649,9 @@ kbd{display:inline-block;min-width:1.8em;padding:1px 7px;margin-right:4px;border
   </div>
 </div>
 
-<script src="js/data.js?v=e8cdf09e"></script>
-<script src="js/sfx.js?v=e8cdf09e"></script>
-<script src="js/ceremony.js?v=e8cdf09e"></script>
-<script src="js/admin.js?v=e8cdf09e"></script>
+<script src="js/data.js?v=841b75ef"></script>
+<script src="js/sfx.js?v=841b75ef"></script>
+<script src="js/ceremony.js?v=841b75ef"></script>
+<script src="js/admin.js?v=841b75ef"></script>
 </body>
 </html>
