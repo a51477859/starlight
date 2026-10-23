@@ -1,5 +1,5 @@
 /* YULPO STARLIGHT CINEMA — opening ceremony slides (개회식 식순), inside the admin console
- * Order: 식 전 안내(auto-rotating) → 환영 → 국민의례 → 교장 선생님 말씀 → 영화제 시작(countdown) → black.
+ * Order: 식 전 안내(auto-rotating) → 환영 → 국민의례 → 교장 선생님 말씀 → 학부모회 회장 인사말 → 영화제 시작(countdown) → black.
  * From the black screen: M opens the hall's movie in a new tab, D jumps straight to that hall's LED draw.
  * Art: assets/ceremony/*.jpg (Codex, matched to the key visual). Music: assets/audio/anthem.mp3 (국민의례).
  */
@@ -98,9 +98,9 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
   });
 
   // ---------- slides ----------
-  const order = () => ['lobby', 'welcome', 'anthem', 'speech', 'start'];
+  const order = () => ['lobby', 'welcome', 'anthem', 'speech', 'pta', 'start'];
   const sec = k => $(`#cer .cs[data-k="${k}"]`);
-  const NAMES = { lobby: '식 전 안내', welcome: '환영 인사', anthem: '국민의례', speech: '교장 선생님 말씀', start: '별빛 영화제 시작' };
+  const NAMES = { lobby: '식 전 안내', welcome: '환영 인사', anthem: '국민의례', speech: '교장 선생님 말씀', pta: '학부모회 회장 인사말', start: '별빛 영화제 시작' };
 
   function show(i) {
     i = Math.max(0, Math.min(slides.length - 1, i));
@@ -116,7 +116,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     if (k === 'lobby') startLobby(); else stopLobby();
     if (k === 'anthem') sec('anthem').dataset.step = '0';
     if (k === 'welcome') { window.SFX?.curtain(); window.SFX?.twinkle(.4, 1.2); }
-    if (k === 'speech') window.SFX?.twinkle(.3, .4);
+    if (k === 'speech' || k === 'pta') window.SFX?.twinkle(.3, .4);
     if (k === 'start') window.SFX?.woosh(.5);
     stage.classList.remove('black');
     info();
@@ -265,7 +265,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
   $('#cFull').addEventListener('click', () => document.fullscreenElement ? document.exitFullscreen() : goFull());
   $$('[data-cer]').forEach(b => b.addEventListener('click', () => open(b.dataset.cer)));
   $('#cerOrder').innerHTML = ['식 전 안내 (포토존 · 화장실 · 앞자리 착석 · 비상 대피로 · 추첨 예고, 저절로 넘어감 / ↑↓로 직접 넘기기)', '별빛 영화제에 오신 여러분을 환영합니다',
-    '국민의례: 국기에 대한 경례 (누르면 음악 시작 → 끝나면 "이하 의식 생략")', '교장 선생님 말씀', '별빛 영화제 시작 (5·4·3·2·1 카운트다운 → 검은 화면 → 영화 열기)']
+    '국민의례: 국기에 대한 경례 (누르면 음악 시작 → 끝나면 "이하 의식 생략")', '교장 선생님 말씀', '학부모회 회장 인사말', '별빛 영화제 시작 (5·4·3·2·1 카운트다운 → 검은 화면 → 영화 열기)']
     .map(t => `<li>${t}</li>`).join('');
 
   addEventListener('keydown', e => {
