@@ -9,13 +9,12 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     kids: { svc: '웨이브', url: 'https://www.wavve.com/player/movie?movieid=MV_CF01_SY0000011825' },
     star: { svc: '왓챠', url: 'https://watcha.com/watch/m5ZlLw9?ms=basic' },
   };
-  // map: 'wc' | 'exit' draws the 2층 강당(=체육관) sketch instead of a picture (layout from the event floor plan:
-  // screen on the left wall, the only door on the balloon-arch side). Stair positions are not drawn — only "가까운 계단".
+  // map: 'wc' | 'exit' draws the 2층 floor map (floorMap) in a cue-sheet frame instead of a picture
   const NOTICES = [
     { k: 'PHOTO ZONE', img: 'photozone', short: '레드카펫 · 포토존', sec: 9, title: '레드카펫과<br><em>대형 포토존</em>',
       body: '입구 레드카펫과 대형 포토존에서 가족, 친구와 함께 오늘의 별빛 추억을 남겨 보세요.' },
-    { k: 'RESTROOM', map: 'wc', short: '화장실 위치 안내', sec: 13, title: '화장실은<br>출입구 나가서<br><em>왼쪽 복도</em>',
-      body: '왼쪽 벽에 남자 화장실, 바로 뒤에 여자 화장실이 있어요.',
+    { k: 'RESTROOM', map: 'wc', short: '화장실 위치 안내', sec: 13, title: '화장실은<br>출입구 나가서<br><em>왼쪽</em>으로',
+      body: '로비 왼쪽 모퉁이에 남자 화장실, 그 위쪽 복도에 여자 화장실이 있어요.',
       route: '<span class="no">강당 안 화장실</span><i>✕</i>' },
     { k: 'SEATING', img: 'seats', short: '앞자리부터 착석', sec: 9, title: '<em>앞자리부터</em><br>앉아 주세요',
       body: '뒤에 오시는 분들을 위해 앞줄부터 빈자리 없이 채워 주세요.' },
@@ -25,23 +24,38 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     { k: 'STAR EVENT', img: 'giftbox', short: '영화 중간 추첨 이벤트', sec: 9, title: '영화 중간에<br><em>추첨 이벤트</em>가 있어요',
       body: '별빛 한마디를 남긴 친구 중에서 뽑아요. 끝까지 자리를 지켜 주세요!' },
   ];
-  // restroom: Codex illustration drawn from the teacher's 2층 walk-through video (8.6s) — 남자 화장실 first, 여자 화장실 right behind it, on the left wall
-  const wcPhoto = () => `<figure class="wcph"><img src="assets/ceremony/wc-art.jpg" alt="왼쪽 복도의 화장실 입구 그림">
-      <span class="pin m" style="left:32%;top:18%">남자 화장실</span><span class="pin w" style="left:48%;top:26%">여자 화장실</span></figure>`;
-  // evacuation: a route-line diagram (not to scale) from the teacher's walk-through video of the 2층 —
-  // 강당 앞 로비 → 로비 옆 계단 → 복도 계단 → 도서관 지나 끝 계단; every stair goes down to 운동장. The stair picture is a Codex illustration (no real photos on screen).
-  const STAIRS = [{ x: 120 }, { x: 240 }, { x: 365 }];
-  function evacMap() {
-    return `<div class="evac"><svg class="hmap exit" viewBox="0 0 400 150" role="img" aria-label="비상 대피로: 출입구에서 가까운 계단으로, 운동장 집결">
-      <rect class="field" x="6" y="112" width="388" height="34" rx="10"/><text class="lbl fld" x="200" y="135" text-anchor="middle">1층으로 내려가 → 운동장 집결</text>
-      <path class="route" d="M34 46 H365"/>
-      ${STAIRS.map(s => `<path class="route down" d="M${s.x} 64 V108"/><g class="dest" transform="translate(${s.x} 46)"><circle r="19"/><text y="6" text-anchor="middle">계단</text></g>`).join('')}
-      <g class="here" transform="translate(34 46)"><circle r="11"/><circle class="ping" r="11"/></g>
-      <text class="lbl here-t" x="34" y="18" text-anchor="middle">강당 출입구</text>
-      <g class="nolift" transform="translate(300 46)"><rect x="-26" y="-14" width="52" height="28" rx="6"/><text y="5" text-anchor="middle">승강기✕</text></g>
-    </svg>
-    <figure class="evac-ph"><img src="assets/ceremony/stair-art.jpg" alt="비상구 표지가 있는 계단 그림"><figcaption>가까운 계단으로 나눠서 내려가요</figcaption></figure></div>`;
+  // 2층 floor map, north up, from the teacher's hand sketch (2026-10-23): 강당 doors open north onto a lobby;
+  // lobby west = 계단①, NW corner = 남자 화장실, corridor north of it = 여자 화장실; NE corridor = 승강기 then 계단②;
+  // east link → long N–S classroom corridor with a stair at its south end. Not to scale. Insets are Codex illustrations.
+  function floorMap(kind) {
+    const wc = kind === 'wc';
+    const routes = wc ? ['M160 236 V160 H78 V56']
+      : ['M160 236 V172 H52', 'M160 236 V150 H228 V30', 'M160 236 V163 H353 V262'];
+    const stair = (x, y, w, h) => `<g class="st"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/><text x="${x + w / 2}" y="${y + h / 2 + 5}" text-anchor="middle">계단</text></g>`;
+    return `<svg class="fm ${kind}" viewBox="0 0 400 300" role="img" aria-label="${wc ? '2층 화장실 가는 길' : '2층 비상 대피로'}">
+      <g class="walk"><rect x="50" y="120" width="220" height="80"/><rect x="105" y="196" width="110" height="20"/><rect x="50" y="14" width="55" height="108"/>
+        <rect x="205" y="30" width="45" height="92"/><rect x="268" y="140" width="64" height="46"/><rect x="330" y="8" width="46" height="256"/></g>
+      <g class="cls"><rect x="378" y="16" width="18" height="56"/><rect x="378" y="80" width="18" height="56"/><rect x="378" y="144" width="18" height="56"/><rect x="378" y="208" width="18" height="52"/></g>
+      <text class="t dim" x="387" y="292" text-anchor="middle">교실</text>
+      <g class="hallroom"><rect x="80" y="218" width="160" height="78" rx="6"/><text x="160" y="282" text-anchor="middle">강당 (행사장)</text></g>
+      <rect class="dr" x="118" y="212" width="26" height="8" rx="2"/><rect class="dr" x="176" y="212" width="26" height="8" rx="2"/>
+      <g class="wcm ${wc ? 'hot' : ''}"><rect x="14" y="92" width="36" height="30" rx="4"/><text x="32" y="112" text-anchor="middle">남</text></g>
+      <g class="wcw ${wc ? 'hot' : ''}"><rect x="14" y="40" width="36" height="30" rx="4"/><text x="32" y="60" text-anchor="middle">여</text></g>
+      ${stair(10, 140, 40, 56)}${stair(205, 2, 45, 28)}${stair(330, 264, 46, 32)}
+      <g class="lift"><rect x="252" y="84" width="34" height="30" rx="4"/><text x="269" y="104" text-anchor="middle">승강기</text>${wc ? '' : '<path class="x" d="M254 86 L284 112 M284 86 L254 112"/>'}</g>
+      <text class="t dim" x="160" y="165" text-anchor="middle">로비</text>
+      <g class="north" transform="translate(30 250)"><path d="M0 -18 L8 4 L0 -2 L-8 4 Z"/><text y="22" text-anchor="middle">N</text></g>
+      ${routes.map(d => `<path class="rt" d="${d}"/>`).join('')}
+      <g class="here" transform="translate(160 240)"><circle r="9"/><circle class="ping" r="9"/></g>
+      <text class="t here-t" x="174" y="256">지금 여기</text>
+    </svg>`;
   }
+  // cue-sheet frame (clapper stripes + film sprockets) around the map, with the scene illustration as an inset
+  const cueFrame = (no, it) => `<figure class="cue ${it.map}">
+      <figcaption class="cue-bar"><b>CUE ${String(no).padStart(2, '0')}</b><span>${it.k} · 2F</span><i>MAP</i></figcaption>
+      <div class="cue-body">${floorMap(it.map)}
+        <div class="inset"><img src="assets/ceremony/${it.map === 'wc' ? 'wc-art' : 'stair-art'}.jpg" alt=""><small>${it.map === 'wc' ? '왼쪽 벽 남 → 여' : '비상구 표지 따라'}</small></div></div>
+    </figure>`;
 
   const cer = $('#cer'), stage = $('#cstage');
   let hall = 'kids', slides = [], idx = 0, uiTimer = null;
@@ -135,7 +149,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     nIdx = (n + NOTICES.length) % NOTICES.length;
     const it = NOTICES[nIdx];
     $('#lbCard').classList.toggle('is-map', !!it.map);
-    $('#lbCard').innerHTML = `<div class="art swap">${it.map === 'wc' ? wcPhoto() : it.map === 'exit' ? evacMap() : `<img src="assets/ceremony/${it.img}.jpg" alt="">`}</div>
+    $('#lbCard').innerHTML = `<div class="art swap">${it.map ? cueFrame(nIdx + 1, it) : `<img src="assets/ceremony/${it.img}.jpg" alt="">`}</div>
       <div class="copy"><div class="k">${it.k}</div><h3>${it.title}</h3>${it.body ? `<p>${it.body}</p>` : ''}${it.route ? `<div class="route">${it.route}</div>` : ''}</div>`;
     $$('#lbList li').forEach((li, i) => { li.classList.remove('on'); if (i === nIdx) { void li.offsetWidth; li.classList.add('on'); } });
     clearTimeout(lbTimer); lbTimer = setTimeout(() => paintNotice(nIdx + 1), it.sec * 1000);   // map slides stay up longer
@@ -156,7 +170,9 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
       $('#lbCount').textContent = (h ? h + ':' + String(mm).padStart(2, '0') : mm) + ':' + String(ss).padStart(2, '0');
     } else { $('#lbCountL').textContent = 'STARTING SOON'; $('#lbCount').textContent = '곧 시작'; }
   }
-  $('#lbList').innerHTML = NOTICES.map((n, i) => `<li style="--len:${n.sec}s"><b>0${i + 1}</b>${n.short}</li>`).join('');
+  $('#lbList').innerHTML = NOTICES.map((n, i) => `<li role="button" tabindex="0" data-n="${i}" style="--len:${n.sec}s"><b>0${i + 1}</b>${n.short}</li>`).join('');
+  // tap a notice to jump straight to it (its own timer restarts from there)
+  $('#lbList').addEventListener('click', e => { const li = e.target.closest('li'); if (!li) return; e.stopPropagation(); paintNotice(+li.dataset.n); pokeUI(); });
   const tick = NOTICES.map(n => `<span>★ <i>${n.k}</i> ${n.short}</span>`).join('') + '<span>★ <i>ENJOY</i> 별빛 영화제에 오신 것을 환영합니다</span>';
   $('#ticker').innerHTML = tick + tick;   // doubled so the -50% loop is seamless
 
