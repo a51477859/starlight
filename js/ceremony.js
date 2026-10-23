@@ -19,34 +19,42 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     { k: 'SEATING', img: 'seats', short: '앞자리부터 착석', sec: 9, title: '<em>앞자리부터</em><br>앉아 주세요',
       body: '뒤에 오시는 분들을 위해 앞줄부터 빈자리 없이 채워 주세요.' },
     { k: 'EMERGENCY', map: 'exit', short: '비상시 대피로', sec: 13, title: '비상시에는<br><em class="g">운동장</em>으로',
-      route: '<span>출입구로 나가기</span><i>→</i><span>가까운 계단으로 나눠서</span><i>→</i><span class="safe">운동장 집결</span>',
-      body: '뛰지 말고, 선생님 안내에 따라 질서 있게 이동해요.' },
+      body: '출입구로 나가 선생님 안내에 따라 가까운 계단으로 나눠서 내려가요. 승강기는 타지 않아요.',
+      route: '<span>뛰지 않기</span><span>밀지 않기</span><span class="safe">운동장 집결</span>' },
     { k: 'STAR EVENT', img: 'giftbox', short: '영화 중간 추첨 이벤트', sec: 9, title: '영화 중간에<br><em>추첨 이벤트</em>가 있어요',
       body: '별빛 한마디를 남긴 친구 중에서 뽑아요. 끝까지 자리를 지켜 주세요!' },
   ];
-  // top-down sketch of the 2층 강당: corridor on top, door at top-centre, screen on the left wall
-  function hallMap(kind) {
+  // top-down sketch of the 2층 강당 for the restroom: corridor on top, door at top-centre, screen on the left wall
+  function hallMap() {
     const seats = [];
     for (let r = 0; r < 5; r++) for (let c = 0; c < 9; c++) seats.push(`<rect x="${132 + c * 21}" y="${150 + r * 21}" width="13" height="11" rx="3"/>`);
-    const wc = kind === 'wc';
-    const path = wc ? 'M226 214 V172 H200 V44 H58' : 'M226 214 V172 H200 V44';
-    return `<svg class="hmap ${kind}" viewBox="0 0 400 300" role="img" aria-label="${wc ? '화장실 가는 길 약도' : '비상 대피로 약도'}">
+    return `<svg class="hmap wc" viewBox="0 0 400 300" role="img" aria-label="화장실 가는 길 약도">
       <rect class="hall" x="40" y="86" width="320" height="200" rx="10"/>
-      <rect class="corr" x="10" y="20" width="380" height="48" rx="10"/><text class="lbl" x="${wc ? 300 : 110}" y="${wc ? 50 : 83}" text-anchor="middle">2층 복도</text>
+      <rect class="corr" x="10" y="20" width="380" height="48" rx="10"/><text class="lbl" x="300" y="50" text-anchor="middle">2층 복도</text>
       <rect class="scr" x="50" y="104" width="9" height="162" rx="3"/><text class="lbl sm" transform="translate(80 185) rotate(-90)" text-anchor="middle">스크린</text>
       <g class="seat">${seats.join('')}</g>
       <rect class="door" x="178" y="80" width="44" height="12" rx="3"/><text class="lbl gold" x="236" y="116">출입구</text>
       <circle class="bal" cx="170" cy="80" r="6"/><circle class="bal" cx="230" cy="80" r="6"/>
       <text class="lbl dim" x="200" y="280" text-anchor="middle">2층 강당 (체육관)</text>
-      <path class="route" d="${path}"/>
-      ${wc
-        ? `<g class="dest" transform="translate(40 44)"><circle r="22"/><text y="6" text-anchor="middle">WC</text></g><text class="lbl gold" x="40" y="10" text-anchor="middle">화장실</text>`
-        : `<path class="route" d="M200 44 H350"/><path class="route" d="M200 44 H50"/>
-           <g class="dest" transform="translate(32 44)"><circle r="22"/><text y="6" text-anchor="middle">계단</text></g>
-           <g class="dest" transform="translate(368 44)"><circle r="22"/><text y="6" text-anchor="middle">계단</text></g>`}
+      <path class="route" d="M226 214 V172 H200 V44 H58"/>
+      <g class="dest" transform="translate(40 44)"><circle r="22"/><text y="6" text-anchor="middle">WC</text></g><text class="lbl gold" x="40" y="10" text-anchor="middle">화장실</text>
       <g class="here" transform="translate(226 214)"><circle r="11"/><circle class="ping" r="11"/></g>
       <text class="lbl here-t" x="244" y="240">지금 여기</text>
     </svg>`;
+  }
+  // evacuation: a route-line diagram (not to scale) from the teacher's walk-through video of the 2층 —
+  // 강당 앞 로비 → 로비 옆 계단 → 복도 계단 → 도서관 지나 끝 계단; every stair goes down to 운동장. Photos are frames of that video.
+  const STAIRS = [{ x: 120, img: 'stair-1', name: '강당 옆 계단' }, { x: 240, img: 'stair-2', name: '복도 계단' }, { x: 365, img: 'stair-3', name: '도서관 쪽 끝 계단' }];
+  function evacMap() {
+    return `<div class="evac"><svg class="hmap exit" viewBox="0 0 400 150" role="img" aria-label="비상 대피로: 출입구에서 가까운 계단으로, 운동장 집결">
+      <rect class="field" x="6" y="112" width="388" height="34" rx="10"/><text class="lbl fld" x="200" y="135" text-anchor="middle">1층으로 내려가 → 운동장 집결</text>
+      <path class="route" d="M34 46 H365"/>
+      ${STAIRS.map(s => `<path class="route down" d="M${s.x} 64 V108"/><g class="dest" transform="translate(${s.x} 46)"><circle r="19"/><text y="6" text-anchor="middle">계단</text></g>`).join('')}
+      <g class="here" transform="translate(34 46)"><circle r="11"/><circle class="ping" r="11"/></g>
+      <text class="lbl here-t" x="34" y="18" text-anchor="middle">강당 출입구</text>
+      <g class="nolift" transform="translate(300 46)"><rect x="-26" y="-14" width="52" height="28" rx="6"/><text y="5" text-anchor="middle">승강기✕</text></g>
+    </svg>
+    <div class="evac-ph">${STAIRS.map(s => `<figure><img src="assets/ceremony/${s.img}.jpg" alt="${s.name}"><figcaption>${s.name}</figcaption></figure>`).join('')}</div></div>`;
   }
 
   const cer = $('#cer'), stage = $('#cstage');
@@ -141,7 +149,7 @@ window.YSCCeremony = ({ $, $$, HALLS, S, openLed, reduce }) => {
     nIdx = (n + NOTICES.length) % NOTICES.length;
     const it = NOTICES[nIdx];
     $('#lbCard').classList.toggle('is-map', !!it.map);
-    $('#lbCard').innerHTML = `<div class="art swap">${it.map ? hallMap(it.map) : `<img src="assets/ceremony/${it.img}.jpg" alt="">`}</div>
+    $('#lbCard').innerHTML = `<div class="art swap">${it.map === 'wc' ? hallMap() : it.map === 'exit' ? evacMap() : `<img src="assets/ceremony/${it.img}.jpg" alt="">`}</div>
       <div class="copy"><div class="k">${it.k}</div><h3>${it.title}</h3>${it.body ? `<p>${it.body}</p>` : ''}${it.route ? `<div class="route">${it.route}</div>` : ''}</div>`;
     $$('#lbList li').forEach((li, i) => { li.classList.remove('on'); if (i === nIdx) { void li.offsetWidth; li.classList.add('on'); } });
     clearTimeout(lbTimer); lbTimer = setTimeout(() => paintNotice(nIdx + 1), it.sec * 1000);   // map slides stay up longer
