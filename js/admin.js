@@ -248,7 +248,13 @@ window.YSCAdmin = (root = document) => {
     const taken = new Set(drawsOf(h).map(d => d.key));
     return source().entries.filter(e => e.hall === h && drawStatus(e) === 'in' && !taken.has(YSC.keyOf(e)));
   };
-  const target = h => S().drawCount[h] || 5;
+  // prize tiers (js/data.js PRIZES) decide how many to draw and what the k-th winner gets
+  const target = h => YSC.PRIZES[h].reduce((a, p) => a + p.n, 0);
+  function tierAt(h, i) {   // i = 0-based winner number → { rank, n, gift, no (1-based within the tier) }
+    for (const p of YSC.PRIZES[h]) { if (i < p.n) return { ...p, no: i + 1 }; i -= p.n; }
+    return null;
+  }
+  const tierName = p => `${p.rank}등 상${p.gift ? ' · ' + p.gift : ''}`;
   const winnersOf = h => drawsOf(h).filter(d => !d.absent);
   function renderDraw() {
     $('#drawCards').innerHTML = ['kids', 'star'].map(h => {
@@ -300,13 +306,13 @@ window.YSCAdmin = (root = document) => {
     const s = S();
     $('#sClose').value = toLocalInput(s.voteClose);
     $('#sReq').checked = !!s.requireComment;
-    $('#sDrawK').value = s.drawCount.kids; $('#sDrawS').value = s.drawCount.star;
+    $('#sDrawK').value = target('kids'); $('#sDrawS').value = target('star');
     $('#sMask').checked = !!s.maskName;
     $('#sBlock').value = (s.blocklist || []).join(', ');
   }
   $('#settingsForm').addEventListener('submit', ev => {
     ev.preventDefault();
-    const k = parseInt($('#sDrawK').value, 10), st = parseInt($('#sDrawS').value, 10);
+    const k = target('kids'), st = target('star');
     if (!$('#sClose').value) return $('#settingsErr').textContent = '마감 일시를 넣어 주세요.';
     if (!(k >= 1 && k <= 10 && st >= 1 && st <= 10)) return $('#settingsErr').textContent = '추첨 인원은 1~10명으로 넣어 주세요.';
     $('#settingsErr').textContent = '';
@@ -368,7 +374,8 @@ window.YSCAdmin = (root = document) => {
   }
   function toggleWall() { if (!rolling) setState(stage.dataset.s === 'wall' ? 'intermission' : 'wall'); }
   function info() {
-    $('#ledInfo').textContent = `${HALLS[ledHall].name} · 당첨 ${winnersOf(ledHall).length}/${target(ledHall)} · 후보 ${pool(ledHall).length}명 · 스페이스바: 다음`;
+    const nx = tierAt(ledHall, winnersOf(ledHall).length);
+    $('#ledInfo').textContent = `${HALLS[ledHall].name} · 당첨 ${winnersOf(ledHall).length}/${target(ledHall)}${nx ? ` · 다음: ${nx.rank}등 ${nx.no}/${nx.n}` : ''} · 후보 ${pool(ledHall).length}명 · 스페이스바: 다음`;
   }
   function openLed(h) {
     ledHall = h; current = null;
@@ -386,10 +393,23 @@ window.YSCAdmin = (root = document) => {
     if (rolling) return;
     const s = stage.dataset.s;
     if (s === 'wall') return setState('intermission');
-    if (s === 'intermission') return roll();
+    if (s === 'intermission' || s === 'reveal') return nextPick();
+    if (s === 'tier') return roll();
     if (s === 'winner') { showReveal(); return; }
-    if (s === 'reveal') { return winnersOf(ledHall).length >= target(ledHall) ? setState('end') : roll(); }
     if (s === 'end') return;
+  }
+  // before the first winner of each prize tier, announce the tier ("이제 2등!")
+  function nextPick() {
+    const i = winnersOf(ledHall).length, p = tierAt(ledHall, i);
+    if (!p) return setState('end');
+    if (p.no === 1) return showTier(p);
+    roll();
+  }
+  function showTier(p) {
+    $('#tBig').textContent = ['', '1st Prize', '2nd Prize', '3rd Prize'][p.rank] || `${p.rank}th Prize`;
+    $('#tText').textContent = `${tierName(p)} · ${p.n}명`;
+    $('#tHall').textContent = HALLS[ledHall].name;
+    setState('tier'); window.SFX?.woosh(.6); window.SFX?.twinkle(.5, .3);
   }
   function roll() {
     const cands = pool(ledHall);
@@ -416,6 +436,9 @@ window.YSCAdmin = (root = document) => {
   }
   async function showWinner(e) {
     current = e;
+    const p = tierAt(ledHall, winnersOf(ledHall).length);
+    $('#wTier').textContent = p ? `${tierName(p)}  ${p.no}/${p.n}` : '';
+    $('#wCall').textContent = p?.rank === 1 ? '학부모님과 함께 무대 앞으로 나와 주세요!' : '무대 앞으로 나와 한마디를 들려주세요!';
     $('#wWho').textContent = `${e.grade}학년 ${e.cls}반`;
     $('#wName').textContent = nameOnLed(e.name);
     setState('winner'); burst(); info();

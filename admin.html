@@ -129,10 +129,10 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 #led.show-ui{cursor:default}
 .stage{position:relative;width:min(100vw,177.78vh);aspect-ratio:16/9;overflow:hidden;container-type:inline-size;background:#07070A;color:#fff}
 .stage .bg{position:absolute;inset:0;background:url(assets/img/key-visual.jpg) 70% 50%/cover;opacity:.0;transition:opacity .8s}
-.stage[data-s="intermission"] .bg,.stage[data-s="end"] .bg{opacity:.45}
+.stage[data-s="intermission"] .bg,.stage[data-s="end"] .bg,.stage[data-s="tier"] .bg{opacity:.45}
 .stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 70% at 50% 0%,rgba(255,236,200,.14),transparent 70%),radial-gradient(90% 60% at 50% 110%,rgba(214,40,57,.35),transparent 70%)}
 .scene{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;gap:1.2cqw;padding:4cqw;opacity:0;visibility:hidden;transition:opacity .5s,visibility .5s;z-index:1}
-.stage[data-s="intermission"] .s-inter,.stage[data-s="roll"] .s-roll,.stage[data-s="winner"] .s-win,.stage[data-s="reveal"] .s-rev,.stage[data-s="end"] .s-end,.stage[data-s="wall"] .s-wall{opacity:1;visibility:visible}
+.stage[data-s="intermission"] .s-inter,.stage[data-s="roll"] .s-roll,.stage[data-s="winner"] .s-win,.stage[data-s="reveal"] .s-rev,.stage[data-s="end"] .s-end,.stage[data-s="wall"] .s-wall,.stage[data-s="tier"] .s-tier{opacity:1;visibility:visible}
 .hallline{font-size:1.6cqw;font-weight:800;letter-spacing:.2em;color:var(--corn);text-transform:uppercase}
 .big{font-family:var(--display);font-weight:400;text-transform:uppercase;line-height:.9;letter-spacing:.01em}
 .s-inter .big{font-size:11cqw}
@@ -142,6 +142,9 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 .slot{font-size:9cqw;font-weight:900;letter-spacing:-.02em;min-height:1.2em;font-variant-numeric:tabular-nums}
 .slot small{display:block;font-size:3cqw;font-weight:700;color:#D8D2DC;letter-spacing:0}
 .s-win .big{font-size:5.4cqw;color:var(--corn)}
+.s-win .tier{display:inline-block;padding:.5cqw 1.8cqw;border-radius:99px;background:var(--red);font-size:2.6cqw;font-weight:900;letter-spacing:.02em}
+.s-tier .big{font-size:13cqw;color:var(--corn);text-shadow:0 0 4cqw rgba(255,201,64,.45)}
+.s-tier p{margin:0;font-size:3.4cqw;font-weight:900}
 .s-win .who{font-size:3.4cqw;font-weight:800;color:#E8E3EA}
 .s-win .name{font-size:12cqw;font-weight:900;line-height:1.05;letter-spacing:-.02em}
 .s-win p{margin:1cqw 0 0;font-size:2.6cqw;font-weight:800}
@@ -488,8 +491,8 @@ kbd{display:inline-block;min-width:1.8em;padding:1px 7px;margin-right:4px;border
         <div class="field"><label for="sClose">투표 마감 일시</label><input type="datetime-local" id="sClose"></div>
         <label class="chk"><input type="checkbox" id="sReq"> 한마디를 필수로 받기 (끄면 선택, 남긴 학생만 추첨 후보)</label>
         <div class="two">
-          <div class="field"><label for="sDrawK">1부 추첨 인원</label><input type="number" id="sDrawK" min="1" max="10"></div>
-          <div class="field"><label for="sDrawS">2부 추첨 인원</label><input type="number" id="sDrawS" min="1" max="10"></div>
+          <div class="field"><label for="sDrawK">1부 추첨 인원 (3등 5 · 2등 3 · 1등 2)</label><input type="number" id="sDrawK" min="1" max="10" readonly></div>
+          <div class="field"><label for="sDrawS">2부 추첨 인원 (3등 5 · 2등 3 · 1등 1)</label><input type="number" id="sDrawS" min="1" max="10" readonly></div>
         </div>
         <label class="chk"><input type="checkbox" id="sMask"> LED 화면에서 이름 가운데 가리기 (예: 김○은)</label>
         <div class="field"><label for="sBlock">금칙어 (쉼표로 구분)</label><textarea id="sBlock" rows="3"></textarea></div>
@@ -544,11 +547,17 @@ kbd{display:inline-block;min-width:1.8em;padding:1px 7px;margin-right:4px;border
       <div class="drum">두구두구두구…</div>
       <div class="slot" id="slot"></div>
     </div>
+    <div class="scene s-tier">
+      <div class="hallline" id="tHall"></div>
+      <div class="big" id="tBig"></div>
+      <p id="tText"></p>
+    </div>
     <div class="scene s-win">
       <div class="big">Starlight Event Winner</div>
+      <div class="tier" id="wTier"></div>
       <div class="who" id="wWho"></div>
       <div class="name" id="wName"></div>
-      <p>무대 앞으로 나와 한마디를 들려주세요!</p>
+      <p id="wCall">무대 앞으로 나와 한마디를 들려주세요!</p>
     </div>
     <div class="scene s-rev">
       <div class="q" id="rQ"></div>
@@ -662,9 +671,9 @@ kbd{display:inline-block;min-width:1.8em;padding:1px 7px;margin-right:4px;border
   </div>
 </div>
 
-<script src="js/data.js?v=9036ab45"></script>
-<script src="js/sfx.js?v=9036ab45"></script>
-<script src="js/ceremony.js?v=9036ab45"></script>
-<script src="js/admin.js?v=9036ab45"></script>
+<script src="js/data.js?v=fa39cbbd"></script>
+<script src="js/sfx.js?v=fa39cbbd"></script>
+<script src="js/ceremony.js?v=fa39cbbd"></script>
+<script src="js/admin.js?v=fa39cbbd"></script>
 </body>
 </html>

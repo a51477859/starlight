@@ -48,6 +48,12 @@ window.YSC = (() => {
     ],
   };
 
+  // Starlight Event prizes, drawn in this order (3등 → 2등 → 1등). gift '' = 상품 이름 미정(화면엔 등수만)
+  const PRIZES = {
+    kids: [{ rank: 3, n: 5, gift: '별봉' }, { rank: 2, n: 3, gift: '' }, { rank: 1, n: 2, gift: '' }],
+    star: [{ rank: 3, n: 5, gift: '별봉' }, { rank: 2, n: 3, gift: '' }, { rank: 1, n: 1, gift: '' }],
+  };
+
   // Settings that the admin screen changes (sheet tab "Settings" in stage 7)
   const DEFAULT_SETTINGS = {
     date: '10월 23일 (금)', showDate: '2026.10.23 FRI', place: '학교 체육관 · YULPO CINEMA',
@@ -56,7 +62,7 @@ window.YSC = (() => {
     announced: false,                       // "상영작 발표" 스위치
     winners: { kids: null, star: null },     // 발표한 상영작 id
     requireComment: false,                  // 한마디 필수 여부
-    drawCount: { kids: 5, star: 5 },         // 부별 추첨 인원
+    drawCount: { kids: 10, star: 9 },        // 부별 추첨 인원 (= PRIZES 합계, 화면에서는 PRIZES가 정함)
     maskName: true,                         // LED에 이름 가리기 (김○은)
     blocklist: ['바보', '멍청', '시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새', '지랄', '존나', '졸라', '꺼져', '죽어', '닥쳐'],
   };
@@ -247,5 +253,5 @@ window.YSC = (() => {
     },
   };
 
-  return { API_URL, posterUrl, HALLS, MOVIES, DEFAULT_SETTINGS, store, keyOf, movieById, maskName, flagged, isClosed, api, local: !API_URL };
+  return { API_URL, posterUrl, HALLS, MOVIES, PRIZES, DEFAULT_SETTINGS, store, keyOf, movieById, maskName, flagged, isClosed, api, local: !API_URL };
 })();
