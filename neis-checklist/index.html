@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1학기말 나이스 정리 보드</title>
+<meta name="description" content="2026학년도 1학기말 나이스 입력 및 확인사항(초등) — 담임용 체크리스트 보드">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M5 5h22v15l-7 7H5z' fill='%23F3D27A'/%3E%3Cpath d='M20 27v-7h7' fill='%23D9B24F'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/board.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 5h22v15l-7 7H5z" class="mk-a"/><path d="M20 27v-7h7z" class="mk-b"/><path d="M10 12h12M10 17h7" class="mk-l"/></svg>
+      <div>
+        <p class="eyebrow">2026학년도 1학기말 · 초등 담임용</p>
+        <h1>나이스 정리 보드</h1>
+      </div>
+    </div>
+    <div class="sum" aria-live="polite">
+      <p class="sum-t"><b class="num" id="sumPeeled">0</b>장 뗐어요 <span class="mute">/ 메모 <span class="num" id="sumGroups">0</span>장 · 할 일 <span class="num" id="sumDone">0</span>/<span class="num" id="sumItems">0</span></span></p>
+      <ol class="seg" id="seg" aria-hidden="true"></ol>
+    </div>
+    <nav class="tools">
+      <button class="btn" type="button" data-open="bytes">바이트 계산</button>
+      <button class="btn" type="button" id="printBtn">인쇄</button>
+      <button class="btn ghost" type="button" id="resetBtn">처음부터</button>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="board" id="board" aria-label="할 일 메모 보드"></section>
+
+    <aside class="done" aria-labelledby="doneTitle">
+      <div class="done-head">
+        <h2 id="doneTitle">완료한 작업</h2>
+        <span class="num mute" id="doneCount">0</span>
+      </div>
+      <ol class="done-list" id="doneList"></ol>
+      <div class="done-empty" id="doneEmpty">
+        <div class="ghost-note" aria-hidden="true"></div>
+        <p>메모지의 할 일을 모두 체크하면 오른쪽 아래 귀퉁이가 들려요. 잡아당기거나 누르면 떼어져서 여기로 와요.</p>
+      </div>
+    </aside>
+  </main>
+
+  <section class="print-only" id="printList" aria-hidden="true"></section>
+
+  <footer class="foot">
+    <p>원문: 경기도교육청 「2026학년도 나이스 교무업무 학기말 업무처리 체크리스트(초등학교)(0617)」 · 본 연수물은 단순참고용으로 업무별 연수 책자 및 관련 공문을 참고하시기 바랍니다.</p>
+    <p>체크한 내용은 이 브라우저에만 저장돼요. 디자인 검수 기준: unslop by @heydamir (CC BY 4.0) · 글꼴 Pretendard (OFL)</p>
+  </footer>
+</div>
+
+<!-- 자세히 보기 -->
+<dialog class="sheet" id="sheet" aria-labelledby="sheetTitle">
+  <div class="sheet-in" id="sheetIn"></div>
+</dialog>
+
+<!-- 바이트 계산 -->
+<dialog class="pop" id="bytes" aria-labelledby="bytesTitle">
+  <form method="dialog" class="pop-in">
+    <div class="pop-head">
+      <h2 id="bytesTitle">나이스 바이트 계산</h2>
+      <button class="icon-btn" value="close" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <p class="mute small">한글 3바이트, 영문 · 숫자 · 공백 · 줄바꿈 1바이트로 셉니다. 자율동아리 소개는 90바이트 이내예요.</p>
+    <textarea id="byteIn" rows="5" placeholder="입력할 문장"></textarea>
+    <div class="byte-out">
+      <span><b class="num" id="byteN">0</b> 바이트</span>
+      <span class="mute"><span class="num" id="charN">0</span>자</span>
+      <span class="byte-flag" id="byteFlag"></span>
+    </div>
+    <div class="byte-bar"><i id="byteBar"></i></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="js/data.js"></script>
+<script src="js/board.js"></script>
+</body>
+</html>
