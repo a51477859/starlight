@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>나이스 따라하기 · 교과학습발달상황</title>
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/neis.css">
+</head>
+<body>
+<main class="page">
+  <p class="eyebrow" id="crumb"></p>
+  <h1 id="title"></h1>
+  <p class="lead" id="lead"></p>
+  <span class="src" id="src"></span>
+
+  <section class="sim" id="sim" tabindex="-1" aria-label="나이스 따라하기"></section>
+
+  <section class="after">
+    <h2>여기서 자주 헷갈려요</h2>
+    <div class="qa" id="qa"></div>
+  </section>
+
+  <p class="foot">화면은 2026 경기도 나이스 학기말 연수자료와 4세대 나이스 화면을 보고 다시 그린 것이에요. 학교 · 교사 · 학생 이름은 모두 가상이에요. 실제 메뉴 위치는 학교 권한 설정에 따라 조금 다를 수 있어요.</p>
+</main>
+
+<script src="js/neis-app.js"></script>
+<script src="js/sim-engine.js"></script>
+<script src="js/scenarios.js"></script>
+<script>
+(function () {
+  var id = (location.hash || '#gyogwa').slice(1);
+  var scn = window.NEIS_SCENARIOS[id] || window.NEIS_SCENARIOS.gyogwa;
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function rich(s) { return esc(s).replace(/\{([^}]+)\}/g, '<span class="key">$1</span>'); }
+  document.getElementById('crumb').textContent = '나이스 따라하기 · ' + scn.crumb;
+  document.getElementById('title').textContent = scn.title;
+  document.getElementById('lead').textContent = scn.lead;
+  document.getElementById('src').textContent = '근거: ' + scn.src;
+  document.getElementById('qa').innerHTML = scn.after.map(function (x) {
+    return '<div><h3>' + esc(x.q) + '</h3><p>' + rich(x.a) + '</p><small>' + esc(x.src) + '</small></div>';
+  }).join('');
+  new window.NeisSim(document.getElementById('sim'), scn, window.NEIS_FAKE);
+})();
+</script>
+</body>
+</html>

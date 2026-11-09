@@ -1,0 +1,117 @@
+/* 사이트 공통 — 가독성 우선: 본문 16px, 먹색 글자, 기울임 없음 */
+@font-face {
+  font-family: "Pretendard Variable";
+  src: url("../fonts/PretendardVariable.woff2") format("woff2-variations");
+  font-weight: 45 920; font-display: swap;
+}
+:root {
+  --sans: "Pretendard Variable", Pretendard, system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --bg: #F6F5F1; --surface: #FFFFFF; --sunk: #EFEDE7;
+  --ink: #1B1D21; --ink2: #4A4F57; --ink3: #767B84;
+  --line: rgba(27, 29, 33, .12); --line2: rgba(27, 29, 33, .22);
+  --accent: #2456C8; --accent-s: #E6EDFB;
+  --mark: #E03C3C;            /* 연수자료의 빨간 표시 */
+  --tip-bg: #FFF5D6; --tip-ink: #6B4E00;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17181A; --surface: #1F2023; --sunk: #26282C;
+    --ink: #ECEBE7; --ink2: #B4B6BB; --ink3: #8C9097;
+    --line: rgba(255, 255, 255, .1); --line2: rgba(255, 255, 255, .2);
+    --accent: #85A8F2; --accent-s: #22304D; --tip-bg: #3A3220; --tip-ink: #F1DCA0;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.65; word-break: keep-all; overflow-wrap: anywhere; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.key { display: inline-block; padding: 0 7px; margin: 0 1px; font-size: .9em; line-height: 1.55; border: 1px solid var(--line2); border-bottom-width: 2px; border-radius: 5px; background: var(--surface); white-space: nowrap; }
+
+.btn { height: 38px; padding: 0 16px; border: 1px solid var(--line2); border-radius: 8px; background: var(--surface); font-size: 15px; font-weight: 500; transition: border-color .16s var(--ease), background-color .16s var(--ease), transform .16s var(--ease); }
+.btn:hover { border-color: var(--ink3); }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .4; pointer-events: none; }
+.btn.pri { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--ink2); }
+
+.page { max-width: 1480px; margin: 0 auto; padding: 32px 32px 64px; }
+.eyebrow { font-size: 15px; color: var(--ink2); }
+.page h1 { margin-top: 6px; font-size: 32px; line-height: 1.3; font-weight: 500; letter-spacing: -.02em; }
+.lead { margin-top: 10px; font-size: 18px; color: var(--ink2); max-width: 760px; }
+.src { display: inline-block; margin-top: 12px; font-size: 13px; color: var(--ink3); }
+
+/* ── 따라하기 ─────────────────── */
+.sim { margin-top: 28px; }
+.sim-bar { display: flex; align-items: center; gap: 8px; padding-bottom: 14px; border-bottom: 1.5px solid var(--ink); }
+.sim-bar .sp { flex: 1; }
+.seg { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--sunk); }
+.seg button { height: 34px; padding: 0 16px; border: 0; border-radius: 8px; background: transparent; font-size: 15px; font-weight: 500; color: var(--ink2); transition: background-color .16s var(--ease), color .16s var(--ease); }
+.seg button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+.sim-count { margin-left: 8px; font-size: 15px; color: var(--ink2); }
+
+.sim-body { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; margin-top: 20px; align-items: start; }
+.sim-steps { list-style: none; margin: 0; padding: 0; counter-reset: s; position: sticky; top: 16px; }
+.sim-steps button { width: 100%; display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; text-align: left; font-size: 15px; line-height: 1.45; color: var(--ink2); transition: background-color .16s var(--ease), color .16s var(--ease); }
+.sim-steps button:hover { background: var(--sunk); color: var(--ink); }
+.sim-steps .no { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--line2); display: grid; place-items: center; font-size: 13px; font-weight: 500; }
+.sim-steps li.done button { color: var(--ink3); }
+.sim-steps li.done .no { background: var(--ink3); border-color: var(--ink3); color: var(--bg); }
+.sim-steps li.now button { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.sim-steps li.now .no { background: var(--mark); border-color: var(--mark); color: #fff; }
+
+.sim-win { margin: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line2); background: #fff; box-shadow: 0 24px 48px -32px rgba(0, 0, 0, .35); }
+.sim-chrome { height: 36px; display: flex; align-items: center; gap: 7px; padding: 0 14px; background: #ECEDEF; border-bottom: 1px solid #D7D9DD; color: #555; font-size: 13px; }
+.sim-chrome i { width: 11px; height: 11px; border-radius: 50%; background: #CDD0D5; }
+.sim-chrome span { margin-left: 10px; padding: 3px 14px; border-radius: 6px; background: #fff; }
+.sim-view { position: relative; overflow: hidden; }
+.sim-stage { position: absolute; left: 0; top: 0; width: 1440px; height: 880px; transform-origin: 0 0; }
+.sim-cam { position: absolute; inset: 0; transition: transform .55s var(--ease); }
+
+.sim-hl { position: absolute; left: 0; top: 0; z-index: 90; border: 3px solid var(--mark); border-radius: 6px; pointer-events: none; transition: transform .4s var(--ease), width .4s var(--ease), height .4s var(--ease); }
+.sim-hl b { position: absolute; left: -15px; top: -15px; width: 26px; height: 26px; border-radius: 50%; background: var(--mark); color: #fff; font-size: 14px; font-weight: 700; display: grid; place-items: center; box-shadow: 0 0 0 2px #fff; }
+.sim-cur { position: absolute; left: 0; top: 0; z-index: 95; width: 30px; height: 30px; pointer-events: none; fill: #111; stroke: #fff; stroke-width: 1.4; stroke-linejoin: round; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .3)); transform: translate(1000px, 520px); transition: transform .72s cubic-bezier(.45, 0, .2, 1); }
+.is-try .sim-cur { opacity: 0; }
+.sim-ring { position: absolute; left: 0; top: 0; z-index: 94; width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--mark); opacity: 0; pointer-events: none; }
+.sim-ring.go { animation: ring .45s ease-out; }
+@keyframes ring { from { opacity: .9; scale: .3; } to { opacity: 0; scale: 1.2; } }
+.is-try .nz [data-act] { cursor: pointer; }
+
+.sim-say { margin-top: 18px; padding: 18px 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-height: 120px; }
+.s-t { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 500; }
+.s-t .num { width: 28px; height: 28px; border-radius: 50%; background: var(--mark); color: #fff; font-size: 15px; display: grid; place-items: center; flex: none; }
+.s-d { margin-top: 6px; font-size: 17px; color: var(--ink); }
+.s-tip { margin-top: 10px; padding: 10px 14px; border-radius: 8px; background: var(--tip-bg); color: var(--tip-ink); font-size: 15px; }
+.s-hint { margin-top: 10px; font-size: 15px; color: var(--mark); }
+.s-hint.go { animation: nudge .3s ease-out; }
+@keyframes nudge { 30% { transform: translateX(-4px); } 60% { transform: translateX(3px); } }
+
+/* ── 헷갈리는 점 ───────────────── */
+.after { margin-top: 48px; }
+.after h2 { font-size: 22px; font-weight: 500; padding-bottom: 12px; border-bottom: 1.5px solid var(--ink); }
+.qa { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; }
+.qa div { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.qa h3 { font-size: 17px; font-weight: 500; }
+.qa p { margin-top: 6px; color: var(--ink2); }
+.qa small { display: block; margin-top: 8px; font-size: 13px; color: var(--ink3); }
+
+.foot { margin-top: 56px; font-size: 13px; color: var(--ink3); }
+
+@media (max-width: 1000px) {
+  .page { padding: 20px 16px 48px; }
+  .page h1 { font-size: 26px; }
+  .sim-body { grid-template-columns: 1fr; }
+  .sim-steps { position: static; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; order: 2; }
+  .sim-steps li { flex: none; }
+  .sim-steps button { grid-template-columns: 24px auto; white-space: nowrap; }
+  .sim-bar { flex-wrap: wrap; }
+  .qa { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
